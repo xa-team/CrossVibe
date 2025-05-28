@@ -9,3 +9,8 @@ class Config:
     CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
     REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
     SECRET_KEY = os.getenv("SECRET_KEY")
+    
+    
+    #SQLAlchemy DB 설정
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///users.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
