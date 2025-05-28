@@ -1,4 +1,5 @@
 from vibeapp.extensions import db
+from datetime import datetime
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key = True) #내부용 고유 ID
@@ -6,4 +7,5 @@ class User(db.Model):
     display_name = db.Column(db.String(100)) # 사용자 이름
     access_token = db.Column(db.String(255)) #Spotify API 사용에 필요한 Access Token
     refresh_token = db.Column(db.String(255)) #Access Token 만료 시 사용할 Refresh Token
+    token_expire_at = db.Column(db.DateTime)  # 만료 시각
     is_admin = db.Column(db.Boolean, default=False)  # 관리자 여부

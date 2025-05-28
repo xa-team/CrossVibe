@@ -1,5 +1,6 @@
 import requests
 from flask import Blueprint, redirect, render_template, request, session, url_for
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
 from vibeapp.config import Config
@@ -61,6 +62,8 @@ def callback():
     res_data = res.json()
     access_token = res_data.get("access_token")
     refresh_token = res_data.get("refresh_token")
+    expires_in = res_data.get("expires_in", 3600)
+    expire_time = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
     # 사용자 정보 요청
     user_info = requests.get(
@@ -77,6 +80,7 @@ def callback():
     if user:
         user.access_token = access_token
         user.display_name = display_name
+        user.token_expire_at = expire_time
         if refresh_token: # refres_token은 한 번만 주어질 수도 있음
             user.refresh_token = refresh_token
     else:
@@ -84,7 +88,8 @@ def callback():
             spotify_id = spotify_id,
             display_name = display_name,
             access_token = access_token,
-            refresh_token = refresh_token
+            refresh_token = refresh_token,
+            token_expire_at = expire_time
         )
         db.session.add(user)
         
