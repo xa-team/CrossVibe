@@ -11,6 +11,7 @@
                     <th>ID</th>
                     <th>Spotify ID</th>
                     <th>이름</th>
+                    <th>토큰 만료 시간</th>
                 </tr>
             </thead>
             <tbody>
@@ -19,6 +20,7 @@
                         <td>{{ user.id }}</td>
                         <td>{{ user.spotify_id }}</td>
                         <td>{{ user.display_name or "이름 없음" }}</td>
+                        <td>{{ user.token_expire_at|kst if user.token_expire_at else "없음" }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
