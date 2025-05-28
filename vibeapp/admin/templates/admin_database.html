@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block title %}
+    사용자 목록 | CrossVibe
+{% endblock title %}
+{% block content %}
+    <h2 class="mb-4">📋 사용자 목록 (DB)</h2>
+    {% if users %}
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Spotify ID</th>
+                    <th>이름</th>
+                    <th>토큰 만료 시간</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.spotify_id }}</td>
+                        <td>{{ user.display_name or "이름 없음" }}</td>
+                        <td>{{ user.token_expire_at|kst if user.token_expire_at else "없음" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">등록된 사용자가 없습니다.</div>
+    {% endif %}
+{% endblock content %}
