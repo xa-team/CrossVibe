@@ -1,2 +1,34 @@
-app/.env
-/app/__pycache__
+# Python 캐시
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# 환경 변수 파일
+.env
+*.env
+
+# Flask 관련
+instance/
+*.sqlite3
+*.db
+*.log
+
+# 가상환경 폴더
+venv/
+env/
+
+# 에디터/IDE
+.vscode/
+.idea/
+
+# 운영체제 파일
+.DS_Store
+Thumbs.db
+
+# pytest 캐시
+.pytest_cache/
+
+# 기타 임시파일
+*.tmp

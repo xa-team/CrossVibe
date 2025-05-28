@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block title %}
+    Admin Dashboard
+{% endblock title %}
+{% block content %}
+    <h1 class="mb-4">👑 관리자 대시보드</h1>
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">관리 기능</div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <a href="#">📋 사용자 목록 보기</a>
+                </li>
+                <li class="list-group-item">
+                    <a href="#">🚨 신고 내역 확인</a>
+                </li>
+                <li class="list-group-item">
+                    <a href="#">🎧 플레이리스트 분석</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="alert alert-info">이 페이지는 관리자만 접근 가능합니다.</div>
+{% endblock content %}

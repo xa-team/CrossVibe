@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block title %}
+    CrossVibe
+{% endblock title %}
+{% block content %}
+    <div class="text-center mt-5">
+        {% if user %}
+            <h1 class="mb-4">환영합니다, {{ user.display_name }}</h1>
+            <button class="btn btn-danger" onclick="confirmLogout()">로그아웃</button>
+        {% else %}
+            <h1 class="mb-4">🎧 CrossVibe에 오신 것을 환영합니다!</h1>
+            <a href="{{ url_for('public.login') }}" class="btn btn-success btn-lg">Spotify로 로그인</a>
+        {% endif %}
+    </div>
+    <script>
+        function confirmLogout()
+        {
+            if(confirm("로그아웃 하시겠습니까?"))
+            {
+                window.location.href = "{{url_for('public.logout')}}"
+            }
+        }
+    </script>
+{% endblock content %}
