@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, session, redirect, url_for
 
+from vibeapp.models.user import User
+
 admin_bp = Blueprint(
     "admin",
     __name__,
@@ -27,3 +29,9 @@ def admin_index():
 @admin_required
 def dashboard():
     return render_template("admin_dashboard.html")
+
+@admin_bp.route("/database")
+@admin_required
+def show_database():
+    users = User.query.all()
+    return render_template("admin_database.html", users=users)
