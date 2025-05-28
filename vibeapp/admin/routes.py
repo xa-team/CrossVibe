@@ -9,8 +9,6 @@ admin_bp = Blueprint(
     template_folder="templates"
 )
 
-admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
-
 def admin_required(f):
     from functools import wraps
     @wraps(f)
@@ -19,6 +17,11 @@ def admin_required(f):
             return redirect(url_for("public.home"))
         return f(*args, **kwargs)
     return decorated_function
+
+@admin_bp.route("/")
+@admin_required
+def admin_index():
+    return redirect(url_for("admin.dashboard"))
 
 @admin_bp.route("/dashboard")
 @admin_required
