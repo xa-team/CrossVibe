@@ -9,3 +9,4 @@ class User(db.Model):
     refresh_token = db.Column(db.String(255)) #Access Token 만료 시 사용할 Refresh Token
     token_expire_at = db.Column(db.DateTime)  # 만료 시각
     is_admin = db.Column(db.Boolean, default=False)  # 관리자 여부
+    playlists = db.relationship("Playlist", back_populates="user", cascade="all, delete-orphan") # Playlist DB와의 관계
