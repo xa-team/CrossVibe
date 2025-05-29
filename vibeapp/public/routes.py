@@ -31,7 +31,7 @@ def home():
 def login_platform(platform):
     platform_config = Config.PLATFORM_OAUTH.get(platform)
     if not platform_config:
-        return f"{platform}은 지원하지 않는 플랫폼입니다.", 400
+        return f"{platform}은(는) 아직 지원하지 않는 플랫폼입니다.", 400
     
     params = {
         **platform_config["PARAMS"],
