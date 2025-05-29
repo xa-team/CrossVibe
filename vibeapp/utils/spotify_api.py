@@ -2,7 +2,8 @@ import requests
 import time
 
 from vibeapp.utils.token_utils import refresh_access_token
-from vibeapp.models.user import User
+from vibeapp.models import User, Playlist
+from vibeapp.extensions import db
 
 def get_user_playlists(user: User) -> dict:
     #토큰 자동 갱신
@@ -33,3 +34,31 @@ def get_user_playlists(user: User) -> dict:
         url = data.get("next")  # 다음 페이지 URL (없으면 None)
 
     return playlists
+
+def save_or_update_playlists(user, playlists_data: list):
+    for item in playlists_data:
+        spotify_id = item["id"]
+        name = item["name"]
+        snapshot_id = item.get("snapshot_id")
+        is_public = item.get("public", True)
+        
+        existing = Playlist.query.filter_by(spotify_id=spotify_id, user_id=user.id).first()
+        
+        if existing:
+            #업데이트
+            existing.name = name
+            existing.snapshot_id = snapshot_id
+            existing.is_public = is_public
+        else:
+            #새로 추가
+            new_playlist = Playlist(
+                platform="spotify",
+                spotify_id=spotify_id,
+                name=name,
+                snapshot_id=snapshot_id,
+                is_public=is_public,
+                user=user
+            )
+            db.session.add(new_playlist)
+        
+    db.session.commit()
