@@ -29,21 +29,21 @@ def home():
 # 로그인 라우터
 @public_bp.route("/login/<platform>")
 def login_platform(platform):
-    if platform == "spotify":
-        scope = "user-read-private user-read-email"
-        params = {
-            "client_id": Config.CLIENT_ID,
-            "response_type": "code",
-            "redirect_uri": url_for("public.callback_platform", platform=platform, _external=True),
-            "scope": scope,
-            "show_dialog": "true",
-        }
-        auth_url = "https://accounts.spotify.com/authorize"
-        return redirect(f"{auth_url}?{urlencode(params)}")
+    platform_config = Config.PLATFORM_OAUTH.get(platform)
+    if not platform_config:
+        return f"{platform}은 지원하지 않는 플랫폼입니다.", 400
+    
+    params = {
+        **platform_config["PARAMS"],
+        "client_id": platform_config["CLIENT_ID"],
+        "redirect_uri": platform_config["REDIRECT_URI"],
+    }
+
+    auth_url = platform_config["AUTH_URL"]
+    return redirect(f"{auth_url}?{urlencode(params)}")
     
     #elif platform == "Youtube":
     
-    return f"{platform} 로그인은 아직 지원되지 않습니다.", 400
 
 # 로그아웃 라우터
 @public_bp.route("/logout")
@@ -54,69 +54,75 @@ def logout():
 # 콜백 라우터
 @public_bp.route("/callback/<platform>")
 def callback_platform(platform):
-    if platform == "spotify":
-        code = request.args.get("code")
-
-        token_url = "https://accounts.spotify.com/api/token"
-        payload = {
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": url_for("public.callback_platform", platform=platform, _external=True),
-            "client_id": Config.CLIENT_ID,
-            "client_secret": Config.CLIENT_SECRET,
-        }
-
-        # 토큰 요청
-        res = requests.post(token_url, data=payload)
-        if res.status_code != 200:
-            return "Token 요청 실패", 400
-        
-        res_data = res.json()
-        access_token = res_data.get("access_token")
-        refresh_token = res_data.get("refresh_token")
-        expires_in = res_data.get("expires_in", 3600)
-        expire_time = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-
-        # 사용자 정보 요청
-        user_info = requests.get(
-            "https://api.spotify.com/v1/me",
-            headers={"Authorization": f"Bearer {access_token}"}
-        ).json()
-    
-        spotify_id = user_info["id"]
-        display_name = user_info.get("display_name", "이름을 모르겠는 익명의 사용자")
-    
-        # User 생성 또는 업데이트
-        user = User.query.filter_by(spotify_id=spotify_id).first()
-
-        if not user:
-            user = User(display_name=display_name)
-            db.session.add(user)
-            db.session.flush() # user.id 확보
-            
-        #PlatformToken 저장
-        token = PlatformToken(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            expire_at=expire_time
-        )
-        db.session.add(token)
-        db.session.flush()
-        
-        #PlatformConnection 저장
-        connection = PlatformConnection(
-            user_id=user.id,
-            platform="spotify",
-            toekn_id=token.id
-        )
-        db.session.add(connection)
-        db.session.commit()
-    
-        # 세션에 저장 (간단한 정보만)
-        session["user"] = {"id": user.id, "platform": "spotify"}
-        return redirect(url_for("public.home"))
-    
-    #elif platform == "Youtube":
-    
-    else:
+    platform_config = Config.PLATFORM_OAUTH.get(platform)
+    if not platform_config:
         return f"{platform} 콜백은 아직 지원되지 않습니다.", 400
+
+    code = request.args.get("code")
+    token_url = platform_config["TOKEN_URL"]
+
+    payload = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": platform_config["REDIRECT_URI"],
+        "client_id": platform_config["CLIENT_ID"],
+        "client_secret": platform_config["CLIENT_SECRET"],
+    }
+    # 토큰 요청
+    res = requests.post(token_url, data=payload)
+    if res.status_code != 200:
+        return "토큰 요청 실패", 400
+
+    res_data = res.json()
+    access_token = res_data.get("access_token")
+    refresh_token = res_data.get("refresh_token")
+    expires_in = res_data.get("expires_in", 3600)
+    expire_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
+    # 사용자 정보 요청
+    user_info_res = requests.get(
+        platform_config["USER_INFO_URL"],
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+    if user_info_res.status_code != 200:
+        return "사용자 정보 요청 실패", 400
+
+    user_info = user_info_res.json()
+    platform_user_id = user_info.get("id")
+    display_name = user_info.get("display_name", "익명의 사용자")
+
+    # 기존 유저 존재 여부 확인 (플랫폼 ID 기반 연결)
+    connection = PlatformConnection.query.filter_by(
+        platform=platform,
+        platform_user_id=platform_user_id
+    ).first()
+
+    if connection:
+        user = connection.user
+    else:
+        user = User(display_name=display_name)
+        db.session.add(user)
+        db.session.flush()
+
+    # 토큰 저장
+    token = PlatformToken(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_expire_at=expire_at
+    )
+    db.session.add(token)
+    db.session.flush()
+
+    # 플랫폼 연결 저장
+    new_connection = PlatformConnection(
+        user_id=user.id,
+        platform=platform,
+        platform_user_id=platform_user_id,
+        token_id=token.id
+    )
+    db.session.add(new_connection)
+    db.session.commit()
+
+    # 세션에 저장
+    session["user"] = {"id": user.id, "platform": platform}
+    return redirect(url_for("public.home"))
