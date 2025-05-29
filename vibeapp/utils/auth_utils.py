@@ -1,14 +1,20 @@
 from flask import session
 
-from vibeapp.models.user import User
+from vibeapp.models.platform_connection import PlatformConnection
 
-def get_current_user():
+def get_current_connection():
     user_data = session.get("user")
     if not user_data:
         return None
-    
-    spotify_id = user_data.get("spotify_id")
-    if not spotify_id:
+
+    platforms = user_data.get("platforms", {})
+    active_platform = user_data.get("active_platform")
+    platform_info = platforms.get(active_platform)
+    if not platform_info:
         return None
-    
-    return User.query.filter_by(spotify_id=spotify_id).first()
+
+    connection_id = platform_info.get("connection_id")
+    if not connection_id:
+        return None
+
+    return PlatformConnection.query.get(connection_id)
