@@ -7,7 +7,8 @@ from vibeapp.extensions import db
 from vibeapp.config import Config
 
 def refresh_access_token(user: User) -> str:
-    if user.token_expire_at and user.token_expire_at > datetime.now(timezone.utc):
+    expire_at = user.token_expire_at
+    if expire_at and expire_at.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
         return user.access_token # 아직 유효함
     
     if not user.refresh_token:
