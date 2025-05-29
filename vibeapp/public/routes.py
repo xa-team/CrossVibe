@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 from vibeapp.config import Config
 from vibeapp.extensions import db
 from vibeapp.models.user import User
+from vibeapp.utils import refresh_access_token
 
 public_bp = Blueprint(
     "public",
