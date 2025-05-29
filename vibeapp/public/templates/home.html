@@ -5,11 +5,34 @@
 {% block content %}
     <div class="text-center mt-5">
         {% if user %}
-            <h1 class="mb-4">환영합니다, {{ user.display_name }}</h1>
+            <h1 class="mb-4">환영합니다, {{ user.display_name }}님</h1>
             <button class="btn btn-danger" onclick="confirmLogout()">로그아웃</button>
         {% else %}
             <h1 class="mb-4">🎧 CrossVibe에 오신 것을 환영합니다!</h1>
-            <a href="{{ url_for('public.login') }}" class="btn btn-success btn-lg">Spotify로 로그인</a>
+            <p>플랫폼을 선택해 로그인하세요:</p>
+            {% set platforms = {
+                "spotify": {
+                    "label": "Spotify",
+                    "class": "btn-success",
+                    "emoji": "🎵"
+                },
+                "applemusic": {
+                    "label": "Apple Music",
+                    "class": "btn-secondary",
+                    "emoji": "🍎"
+                },
+                "youtube": {
+                    "label": "YouTube Music",
+                    "class": "btn-danger",
+                    "emoji": "▶️"
+                }
+            } %}
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                {% for platform, info in platforms.items() %}
+                    <a href="{{ url_for('public.login_platform', platform=platform) }}"
+                       class="btn {{ info.class }} btn-lg">{{ info.emoji }} {{ info.label }}(으)로 로그인</a>
+                {% endfor %}
+            </div>
         {% endif %}
     </div>
     <script>

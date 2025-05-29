@@ -1,41 +1,22 @@
+# vibeapp/utils/token_utils.py
 import requests
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
-from vibeapp.config import Config
-from vibeapp.models.user import User
-from vibeapp.extensions import db
-from vibeapp.config import Config
+from vibeapp.models.platform_connection import PlatformConnection
+from vibeapp.services.spotify_auth_service import SpotifyAuthService
 
-def refresh_access_token(user: User) -> str:
-    expire_at = user.token_expire_at
-    if expire_at and expire_at.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
-        return user.access_token # 아직 유효함
+def refresh_access_token(connection: PlatformConnection) -> str:
+    token = connection.token
+
+    # 토큰이 아직 유효하면 반환
+    if token.expire_at and token.expire_at.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+        return token.access_token
+
+    # 플랫폼에 따라 갱신 처리
+    if connection.platform == "spotify":
+        return SpotifyAuthService.refresh_token(token)
+
+    # 추후 다른 플랫폼 추가
+    #elif connection.platform == "youtube":
     
-    if not user.refresh_token:
-        raise ValueError("Refresh token is missing")
-    
-    token_url = "https://accounts.spotify.com/api/token"
-    payload = {
-        "grant_type": "refresh_token",
-        "refresh_token": user.refresh_token,
-        "client_id": Config.CLIENT_ID,
-        "client_secret": Config.CLIENT_SECRET,
-    }
-    
-    res = requests.post(token_url, data=payload)
-    if res.status_code != 200:
-        raise RuntimeError("Token refresh failed")
-    
-    res_data = res.json()
-    user.access_token = res_data.get("access_token")
-    
-    new_refresh_token = res_data.get("refresh_token")
-    if new_refresh_token:
-        user.refresh_token = new_refresh_token
-        
-    expires_in = res_data.get("expires_in", 3600)
-    user.token_expire_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-    
-    db.session.commit()
-    
-    return user.access_token
+    raise NotImplementedError("Token refresh not implemented for this platform")
