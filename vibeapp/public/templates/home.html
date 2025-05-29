@@ -5,7 +5,7 @@
 {% block content %}
     <div class="text-center mt-5">
         {% if user %}
-            <h1 class="mb-4">환영합니다, {{ user.display_name }}</h1>
+            <h1 class="mb-4">환영합니다, {{ user.display_name }}님</h1>
             <button class="btn btn-danger" onclick="confirmLogout()">로그아웃</button>
         {% else %}
             <h1 class="mb-4">🎧 CrossVibe에 오신 것을 환영합니다!</h1>

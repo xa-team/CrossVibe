@@ -22,7 +22,10 @@ public_bp = Blueprint(
 # 초기화면 라우터
 @public_bp.route("/")
 def home():
-    user = session.get("user")
+    user_data = session.get("user")
+    user = None
+    if user_data:
+        user = User.query.get(user_data["id"])
     return render_template("home.html", user=user)
     
 
@@ -108,7 +111,7 @@ def callback_platform(platform):
     token = PlatformToken(
         access_token=access_token,
         refresh_token=refresh_token,
-        token_expire_at=expire_at
+        expire_at=expire_at
     )
     db.session.add(token)
     db.session.flush()
