@@ -7,8 +7,8 @@ from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.models.platform_token import PlatformToken
 
 
-def refresh_access_token(platform_connection: PlatformToken) -> str:
-    token = platform_connection.token
+def refresh_access_token(connection: PlatformToken) -> str:
+    token = connection.token
     
     #만료되지 않았다면 기존 토큰 반환    
     if token.expire_at and token.expire_at.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
@@ -19,7 +19,7 @@ def refresh_access_token(platform_connection: PlatformToken) -> str:
     
     #플랫폼 별 로직 분기
     #Spotify
-    if platform_connection.platform == "spotify":
+    if connection.platform == "spotify":
         token_url = "https://accounts.spotify.com/api/token"
         payload = {
             "grant_type": "refresh_token",
@@ -45,7 +45,7 @@ def refresh_access_token(platform_connection: PlatformToken) -> str:
         db.session.commit()
     
     #Youtube
-    #elif platform_connection.platform == "youtube":
+    #elif connection.platform == "youtube":
     
     else:
         raise NotImplementedError("Token refresh not implemented for this platform")

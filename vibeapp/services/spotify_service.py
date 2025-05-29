@@ -7,9 +7,9 @@ from vibeapp.utils.token_utils import refresh_access_token
 
 
 class SpotifyService:
-    def __init__(self, platform_connection: PlatformConnection):
-        self.connection = platform_connection
-        self.token: PlatformToken = platform_connection.token
+    def __init__(self, connection: PlatformConnection):
+        self.connection = connection
+        self.token: PlatformToken = connection.token
         self.access_token = refresh_access_token(self.token)
         
     def get_playlist(self):
