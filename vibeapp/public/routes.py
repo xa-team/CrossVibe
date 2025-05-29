@@ -123,6 +123,13 @@ def callback_platform(platform):
     db.session.add(new_connection)
     db.session.commit()
 
-    # 세션에 저장
-    session["user"] = {"id": user.id, "platform": platform}
+    # 세션 저장 (멀티플랫폼 대응)
+    session_user = session.get("user", {"id": user.id, "platforms": {}})
+    session_user["platforms"][platform] = {
+        "platform_user_id": platform_user_id,
+        "connection_id": new_connection.id
+    }
+    session_user["active_platform"] = platform
+    session["user"] = session_user
+    
     return redirect(url_for("public.home"))
