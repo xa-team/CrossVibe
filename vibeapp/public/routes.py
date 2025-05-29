@@ -97,7 +97,7 @@ def callback_platform(platform):
         #PlatformToken 저장
         token = PlatformToken(
             access_token=access_token,
-            refresh_access_token=refresh_access_token,
+            refresh_token=refresh_token,
             expire_at=expire_time
         )
         db.session.add(token)
@@ -105,15 +105,15 @@ def callback_platform(platform):
         
         #PlatformConnection 저장
         connection = PlatformConnection(
-            user_id=user.id
-            platform="spotify"
+            user_id=user.id,
+            platform="spotify",
             toekn_id=token.id
         )
         db.session.add(connection)
         db.session.commit()
     
         # 세션에 저장 (간단한 정보만)
-        session["user"] = {"id": user_id, "platform": "spotify"}
+        session["user"] = {"id": user.id, "platform": "spotify"}
         return redirect(url_for("public.home"))
     
     #elif platform == "Youtube":
