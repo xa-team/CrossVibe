@@ -9,6 +9,7 @@ from vibeapp.models.user import User
 from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.models.platform_token import PlatformToken
 from vibeapp.utils import refresh_access_token
+from vibeapp.exceptions import UnsupportedPlatformError, TokenRefreshError
 
 public_bp = Blueprint(
     "public",
@@ -34,7 +35,7 @@ def home():
 def login_platform(platform):
     platform_config = Config.PLATFORM_OAUTH.get(platform)
     if not platform_config:
-        return f"{platform}은(는) 아직 지원하지 않는 플랫폼입니다.", 400
+        raise UnsupportedPlatformError(f"{platform}은(는) 아직 지원하지 않는 플랫폼입니다.", 400)
     
     params = {
         **platform_config["PARAMS"],
@@ -60,11 +61,11 @@ def callback_platform(platform):
     # 1.플랫폼 설정 확인
     platform_config = Config.PLATFORM_OAUTH.get(platform)
     if not platform_config:
-        return f"{platform} 콜백은 아직 지원되지 않습니다.", 400
+        raise UnsupportedPlatformError(f"{platform} 콜백은 아직 지원되지 않습니다.", 400)
 
     code = request.args.get("code")
     if not code:
-        return "Authorization code가 없습니다.", 400
+        raise TokenRefreshError("Authorization code가 없습니다.", 400)
     
     # 2. 토큰 요청
     token_payload = {
@@ -76,7 +77,7 @@ def callback_platform(platform):
     }
     token_res = requests.post(platform_config["TOKEN_URL"], data=token_payload)
     if token_res.status_code != 200:
-        return "토큰 요청 실패", 400
+        raise TokenRefreshError(f"토큰 요청 실패", 400)
 
     token_data = token_res.json()
     access_token = token_data.get("access_token")
@@ -90,7 +91,7 @@ def callback_platform(platform):
         headers={"Authorization": f"Bearer {access_token}"}
     )
     if user_info_res.status_code != 200:
-        return "사용자 정보 요청 실패", 400
+        raise TokenRefreshError(f"사용자 정보 요청 실패", 400)
 
     user_info = user_info_res.json()
     platform_user_id = user_info.get("id")

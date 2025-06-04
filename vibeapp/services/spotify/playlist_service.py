@@ -6,6 +6,7 @@ from vibeapp.utils.token_utils import refresh_access_token
 from vibeapp.models.playlist import Playlist
 from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.services.base_playlist_service import BasePlaylistService
+from vibeapp.exceptions import PlaylistFetchError
 
 class SpotifyPlaylistService(BasePlaylistService):
     def get_playlists(self, connection: PlatformConnection) -> list:
@@ -23,7 +24,7 @@ class SpotifyPlaylistService(BasePlaylistService):
                 continue
              
             if res.status_code != 200:
-                raise RuntimeError(f"플레이리스트 가져오기 실패: {res.status_code} - {res.text}")
+                raise PlaylistFetchError(f"플레이리스트 가져오기 실패: {res.status_code} - {res.text}")
             
             data = res.json()
             playlists.extend(data.get("items", []))
