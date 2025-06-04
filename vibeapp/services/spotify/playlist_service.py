@@ -40,8 +40,9 @@ class SpotifyPlaylistService(BasePlaylistService):
             is_public = item.get("public", True)
             
             existing = Playlist.query.filter_by(
-                spotify_id=spotify_id,
-                platform_connection_id=connection.id
+                platform=connection.platform,
+                platform_user_id=connection.platform_user_id,
+                spotify_id=spotify_id
             ).first()
             
             if existing:
@@ -50,7 +51,8 @@ class SpotifyPlaylistService(BasePlaylistService):
                 existing.is_public = is_public
             else:
                 new_playlist = Playlist(
-                    platform="spotify",
+                    platform=connection.platform,
+                    platform_user_id=connection.platform_user_id,
                     spotify_id=spotify_id,
                     name=name,
                     snapshot_id=snapshot_id,
