@@ -3,7 +3,7 @@ import requests
 from datetime import datetime, timezone
 
 from vibeapp.models.platform_connection import PlatformConnection
-from vibeapp.services.factory import get_auth_service
+from vibeapp.services.spotify_auth_service import SpotifyAuthService
 
 def refresh_access_token(connection: PlatformConnection) -> str:
     token = connection.token
@@ -12,5 +12,11 @@ def refresh_access_token(connection: PlatformConnection) -> str:
     if token.expire_at and token.expire_at.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
         return token.access_token
 
-    auth_service = get_auth_service(connection.platform)
-    return auth_service.refresh_token(token)
+    # 플랫폼에 따라 갱신 처리
+    if connection.platform == "spotify":
+        return SpotifyAuthService.refresh_token(token)
+
+    # 추후 다른 플랫폼 추가
+    #elif connection.platform == "youtube":
+    
+    raise NotImplementedError("Token refresh not implemented for this platform")

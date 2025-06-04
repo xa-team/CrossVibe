@@ -8,65 +8,20 @@
         <table class="table table-bordered table-striped table-hover">
             <thead class="table-dark">
                 <tr>
-                    <th>User ID</th>
+                    <th>ID</th>
+                    <th>Spotify ID</th>
                     <th>이름</th>
-                    <th>권한</th>
-                    <th>플랫폼</th>
-                    <th>Platform User ID</th>
-                    <th>Access Token 만료 시간</th>
+                    <th>토큰 만료 시간</th>
                 </tr>
             </thead>
             <tbody>
                 {% for user in users %}
-                    {% if user.platform_connections %}
-                        {% for conn in user.platform_connections %}
-                            <tr>
-                                <td>{{ user.id }}</td>
-                                <td>{{ user.display_name or "이름 없음" }}</td>
-                                <td>
-                                    {% if user.is_admin %}
-                                        🛡️ 관리자
-                                    {% else %}
-                                        일반 사용자
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if conn.platform == "spotify" %}
-                                        <img src="https://cdn-icons-png.flaticon.com/24/174/174872.png"
-                                             alt="Spotify"
-                                             title="Spotify"
-                                             width="24"
-                                             height="24">
-                                        Spotify
-                                    {% elif conn.platform == "youtube" %}
-                                        <img src="https://cdn-icons-png.flaticon.com/24/1384/1384060.png"
-                                             alt="YouTube"
-                                             title="YouTube"
-                                             width="24"
-                                             height="24">
-                                        YouTube
-                                    {% else %}
-                                        {{ conn.platform }}
-                                    {% endif %}
-                                </td>
-                                <td>{{ conn.platform_user_id }}</td>
-                                <td>{{ conn.token.expire_at|kst if conn.token.expire_at else "없음" }}</td>
-                            </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td>{{ user.id }}</td>
-                            <td>{{ user.display_name or "이름 없음" }}</td>
-                            <td>
-                                {% if user.is_admin %}
-                                    🛡️ 관리자
-                                {% else %}
-                                    일반 사용자
-                                {% endif %}
-                            </td>
-                            <td colspan="3" class="text-muted">⛔ 연결된 플랫폼 없음</td>
-                        </tr>
-                    {% endif %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.spotify_id }}</td>
+                        <td>{{ user.display_name or "이름 없음" }}</td>
+                        <td>{{ user.expire_at|kst if user.expire_at else "없음" }}</td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>

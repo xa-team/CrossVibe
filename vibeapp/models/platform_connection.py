@@ -2,9 +2,6 @@ from vibeapp.extensions import db
 
 class PlatformConnection(db.Model):
     __tablename__ = "platform_connection"
-    __table_args__ = (
-    db.UniqueConstraint('platform', 'platform_user_id', name='uq_platform_user'),
-    )
 
     id = db.Column(db.Integer, primary_key=True)
     platform = db.Column(db.String(50), nullable=False)
