@@ -19,9 +19,14 @@ def admin_required(f):
         if not user_session:
             return redirect(url_for("public.login"))
         
-        user = User.query.filter_by(spotify_id=user_session.get("spotify_id")).first()
+        user_id = user_session.get("id")
+        if not user_id:
+            return redirect(url_for("public.login"))
+        
+        user = User.query.get(user_id)
         if not user or not user.is_admin:
-            abort(403)  # 403 Forbidden
+            abort(403) #403 Forbidden
+        
         return f(*args, **kwargs)
     return decorated_function
 
