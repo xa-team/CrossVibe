@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block title %}
+    내 플레이리스트
+{% endblock title %}
+{% block content %}
+    <h2>{{ platform|capitalize }}의 플레이리스트</h2>
+    {% if playlists %}
+        <ul class="list-group mt-4">
+            {% for pl in playlists %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ pl.name }}
+                    {% if pl.is_public %}
+                        <span class="badge bg-success">Public</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Private</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="mt-3 text-muted">플레이리스트가 없습니다.</p>
+    {% endif %}
+{% endblock content %}

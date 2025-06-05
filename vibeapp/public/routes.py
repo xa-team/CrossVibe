@@ -8,8 +8,12 @@ from vibeapp.extensions import db
 from vibeapp.models.user import User
 from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.models.platform_token import PlatformToken
-from vibeapp.utils import refresh_access_token
+from vibeapp.models.playlist import Playlist
+from vibeapp.services.api import get_playlist_service
+from vibeapp.utils.token_utils import refresh_access_token
+from vibeapp.utils.auth_utils import login_required
 from vibeapp.exceptions import UnsupportedPlatformError, TokenRefreshError
+
 
 public_bp = Blueprint(
     "public",
@@ -114,7 +118,7 @@ def callback_platform(platform):
         db.session.commit()
         
     else:
-        # 5. 새 유저 + 연결 생성성
+        # 5. 새 유저 + 연결 생성
         user = User(display_name=display_name)
         db.session.add(user)
         db.session.flush() # user.id 확보
@@ -148,6 +152,29 @@ def callback_platform(platform):
     session["user"] = session_user
     
     return redirect(url_for("public.home"))
+
+#플레이리스트 라우터
+@public_bp.route("/my-playlists")
+@login_required
+def my_playlists():
+    user_data = session.get("user")
+    active_platform = user_data.get("active_platform")
+    platform_info = user_data["platforms"].get(active_platform)
+    
+    connection_id = platform_info["connection_id"]
+    connection = PlatformConnection.query.get(connection_id)
+    
+    service = get_playlist_service(connection)
+    playlists_data = service.get_playlists()
+    service.save_or_update_playlists(playlists_data)
+    
+    #DB에서 가져오기 (정렬 포함)
+    playlists = Playlist.query.filter_by(
+        platform=connection.platform,
+        platform_user_id=connection.platform_user_id,
+    ).order_by(Playlist.name.asc()).all()
+    
+    return render_template("my_playlists.html", playlists=playlists, platform=active_platform)
 
 # 테스트용 관리자 권한 설정
 @public_bp.route("/make-admin")
