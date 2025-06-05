@@ -13,8 +13,7 @@ from vibeapp.exceptions import PlaylistFetchError, TokenRefreshError, Unsupporte
 
 
 #Blueprint import
-from vibeapp.admin import admin_bp
-from vibeapp.public import public_bp
+from vibeapp.routes import register_routes
 
 def create_app():
     app = Flask(__name__)
@@ -24,8 +23,7 @@ def create_app():
     migrate.init_app(app, db)
 
     # Blueprint 등록
-    app.register_blueprint(admin_bp, url_prefix="/admin")
-    app.register_blueprint(public_bp)
+    register_routes(app)
     
     with app.app_context():
         db.create_all() # DB 테이블 생성

@@ -18,9 +18,6 @@ from vibeapp.exceptions import UnsupportedPlatformError, TokenRefreshError
 public_bp = Blueprint(
     "public",
     __name__,
-    
-    #Blueprint가 각자 독립적인 template 디렉토리 사용을 위해 template_folder 옵션 명시
-    template_folder="templates"
 )
 
 
@@ -31,7 +28,7 @@ def home():
     user = None
     if user_data:
         user = User.query.get(user_data["id"])
-    return render_template("home.html", user=user)
+    return render_template("public/home.html", user=user)
     
 
 # 로그인 라우터
@@ -153,28 +150,6 @@ def callback_platform(platform):
     
     return redirect(url_for("public.home"))
 
-#플레이리스트 라우터
-@public_bp.route("/my-playlists")
-@login_required
-def my_playlists():
-    user_data = session.get("user")
-    active_platform = user_data.get("active_platform")
-    platform_info = user_data["platforms"].get(active_platform)
-    
-    connection_id = platform_info["connection_id"]
-    connection = PlatformConnection.query.get(connection_id)
-    
-    service = get_playlist_service(connection)
-    playlists_data = service.get_playlists()
-    service.save_or_update_playlists(playlists_data)
-    
-    #DB에서 가져오기 (정렬 포함)
-    playlists = Playlist.query.filter_by(
-        platform=connection.platform,
-        platform_user_id=connection.platform_user_id,
-    ).order_by(Playlist.name.asc()).all()
-    
-    return render_template("my_playlists.html", playlists=playlists, platform=active_platform)
 
 # 테스트용 관리자 권한 설정
 @public_bp.route("/make-admin")
