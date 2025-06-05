@@ -3,7 +3,7 @@ import requests
 from datetime import datetime, timezone
 
 from vibeapp.models.platform_connection import PlatformConnection
-from vibeapp.services.factory import get_auth_service
+from vibeapp.services.api import get_auth_service
 
 def refresh_access_token(connection: PlatformConnection) -> str:
     token = connection.token

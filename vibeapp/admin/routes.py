@@ -1,7 +1,7 @@
-from flask import Blueprint, abort, render_template, session, redirect, url_for
-from functools import wraps
+from flask import Blueprint, render_template, redirect, url_for
 
 from vibeapp.models.user import User
+from vibeapp.utils.auth_utils import admin_required
 
 admin_bp = Blueprint(
     "admin",
@@ -11,24 +11,6 @@ admin_bp = Blueprint(
     #Blueprint가 각자 독립적인 template 디렉토리 사용을 위해 template_folder 옵션 명시
     template_folder="templates"
 )
-
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        user_session = session.get("user")
-        if not user_session:
-            return redirect(url_for("public.login"))
-        
-        user_id = user_session.get("id")
-        if not user_id:
-            return redirect(url_for("public.login"))
-        
-        user = User.query.get(user_id)
-        if not user or not user.is_admin:
-            abort(403) #403 Forbidden
-        
-        return f(*args, **kwargs)
-    return decorated_function
 
 @admin_bp.route("/")
 @admin_required
