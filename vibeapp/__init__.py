@@ -1,10 +1,11 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 
-from vibeapp.extensions import db
+from vibeapp.extensions import db, migrate
 from vibeapp.config import Config
 
 #errorhandler import
@@ -20,6 +21,7 @@ def create_app():
     app.config.from_object(Config)
     
     db.init_app(app)
+    migrate.init_app(app, db)
 
     # Blueprint 등록
     app.register_blueprint(admin_bp, url_prefix="/admin")
