@@ -1,9 +1,13 @@
 from sqlalchemy.orm import aliased
-from vibeapp.extensions import db
-from vibeapp.models.friend import Friend
 from sqlalchemy import or_, and_
 
-class User(db.Model):
+from flask_login import UserMixin
+
+from vibeapp.extensions import db, login_manager
+from vibeapp.models.friend import Friend
+
+
+class User(db.Model, UserMixin):
     __tablename__ = "user"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -29,3 +33,8 @@ def friends(self):
             FriendAlias.status == "accepted"
         )
     ))
+    
+#세션에 저장된 사용자 ID를 이용해 User 객체를 로딩
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))

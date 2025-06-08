@@ -3,6 +3,8 @@ from flask import Blueprint, redirect, render_template, request, session, url_fo
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
+from flask_login import current_user, login_required, login_user, logout_user
+
 from vibeapp.config import Config
 from vibeapp.extensions import db
 from vibeapp.models.user import User
@@ -11,7 +13,7 @@ from vibeapp.models.platform_token import PlatformToken
 from vibeapp.models.playlist import Playlist
 from vibeapp.services.api import get_playlist_service
 from vibeapp.utils.token_utils import refresh_access_token
-from vibeapp.utils.auth_utils import login_required
+# from vibeapp.decorators.auth import login_required
 from vibeapp.exceptions import UnsupportedPlatformError, TokenRefreshError
 
 
@@ -21,10 +23,7 @@ public_bp = Blueprint("public", __name__,)
 # 초기화면 라우터
 @public_bp.route("/")
 def home():
-    user_data = session.get("user")
-    user = None
-    if user_data:
-        user = User.query.get(user_data["id"])
+    user = current_user if current_user.is_authenticated else None
     return render_template("public/home.html", user=user)
     
 
@@ -50,6 +49,7 @@ def login_platform(platform):
 # 로그아웃 라우터
 @public_bp.route("/logout")
 def logout():
+    logout_user()
     session.pop("user", None)
     return redirect(url_for("public.home"))
 
@@ -89,6 +89,9 @@ def callback_platform(platform):
         headers={"Authorization": f"Bearer {access_token}"}
     )
     if user_info_res.status_code != 200:
+        print("📡 user_info_res.status:", user_info_res.status_code)
+        print("📡 user_info_res.text:", user_info_res.text) 
+        
         raise TokenRefreshError(f"사용자 정보 요청 실패", 400)
 
     user_info = user_info_res.json()
@@ -136,6 +139,9 @@ def callback_platform(platform):
         db.session.add(connection)
         db.session.commit()
 
+    login_user(user)
+    
+
     # 6. 세션 저장 (멀티플랫폼 대응)
     session_user = session.get("user", {"id": user.id, "platforms": {}})
     session_user["platforms"][platform] = {
@@ -150,16 +156,9 @@ def callback_platform(platform):
 
 # 테스트용 관리자 권한 설정
 @public_bp.route("/make-admin")
+@login_required
 def make_admin():
-    user_session = session.get("user")
-    if not user_session:
-        return "세션에 사용자 정보가 없습니다.", 400
-
-    user_id = user_session.get("id")
-    if not user_id:
-        return "세션에 사용자 ID가 없습니다.", 400
-
-    user = User.query.get(user_id)
+    user = User.query.get(current_user.id)
     if not user:
         return "DB에서 사용자를 찾을 수 없습니다.", 404
 

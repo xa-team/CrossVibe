@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for
 
 from vibeapp.models.user import User
-from vibeapp.utils.auth_utils import admin_required
+from vibeapp.decorators.auth import admin_required
 
 admin_bp = Blueprint(
     "admin",

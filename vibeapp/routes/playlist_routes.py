@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, session
+from flask_login import login_required
+
 from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.models.playlist import Playlist
 from vibeapp.services.api import get_playlist_service
-from vibeapp.utils.auth_utils import login_required
 
 
 playlist_bp = Blueprint("playlist", __name__,)

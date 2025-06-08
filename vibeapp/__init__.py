@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 
-from vibeapp.extensions import db, migrate
+from vibeapp.extensions import db, migrate, login_manager
 from vibeapp.config import Config
 
 #errorhandler import
@@ -21,6 +21,9 @@ def create_app():
     
     db.init_app(app)
     migrate.init_app(app, db)
+    
+    login_manager.init_app(app)
+    login_manager.login_view = "public.login"
 
     # Blueprint 등록
     register_routes(app)
