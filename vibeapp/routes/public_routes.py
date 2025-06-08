@@ -15,10 +15,7 @@ from vibeapp.utils.auth_utils import login_required
 from vibeapp.exceptions import UnsupportedPlatformError, TokenRefreshError
 
 
-public_bp = Blueprint(
-    "public",
-    __name__,
-)
+public_bp = Blueprint("public", __name__,)
 
 
 # 초기화면 라우터

@@ -5,10 +5,7 @@ from vibeapp.services.api import get_playlist_service
 from vibeapp.utils.auth_utils import login_required
 
 
-playlist_bp = Blueprint(
-    "playlist",
-    __name__,
-)
+playlist_bp = Blueprint("playlist", __name__,)
 
 #플레이리스트 라우터
 @playlist_bp.route("/my-playlists")
