@@ -7,7 +7,7 @@
         {% if user %}
             <h1 class="mb-4">환영합니다, {{ user.display_name }}님</h1>
             <button class="btn btn-danger" onclick="confirmLogout()">로그아웃</button>
-            <a href="{{ url_for('public.my_playlists') }}"
+            <a href="{{ url_for('playlist.my_playlists') }}"
                class="btn btn-primary mt-3">🎶 내 플레이리스트 보기</a>
         {% else %}
             <h1 class="mb-4">🎧 CrossVibe에 오신 것을 환영합니다!</h1>
