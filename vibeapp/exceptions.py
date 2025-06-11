@@ -9,3 +9,7 @@ class TokenRefreshError(Exception):
 class UnsupportedPlatformError(Exception):
     """로그인시 지원하지 않는 플랫폼일 경우 발생하는 에러"""
     pass
+
+class FriendRequestError(Exception):
+    """친구 신청하는 과정에서 발생하는 에러"""
+    pass

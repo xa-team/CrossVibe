@@ -9,7 +9,7 @@ from vibeapp.extensions import db, migrate, login_manager
 from vibeapp.config import Config
 
 #errorhandler import
-from vibeapp.exceptions import PlaylistFetchError, TokenRefreshError, UnsupportedPlatformError
+from vibeapp.exceptions import PlaylistFetchError, TokenRefreshError, UnsupportedPlatformError, FriendRequestError
 
 
 #Blueprint import
@@ -43,6 +43,10 @@ def create_app():
     @app.errorhandler(UnsupportedPlatformError)
     def handle_platform_error(e):
         return jsonify({"error": "지원되지 않는 플랫폼입니다", "detail": str(e)}), 400
+    
+    @app.errorhandler(FriendRequestError)
+    def handle_friend_request_error(e):
+        return jsonify({"error": "친구 신청 실패", "detail": str(e)}), 400
         
     def kst_format(dt):
         if dt is None:
