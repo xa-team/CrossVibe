@@ -4,14 +4,17 @@ from datetime import datetime, timezone, timedelta
 from vibeapp.config import Config
 from vibeapp.extensions import db
 from vibeapp.models.platform_token import PlatformToken
+from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.services.base_auth_service import BaseAuthService
 from vibeapp.exceptions import TokenRefreshError
 
 
 class SpotifyAuthService(BaseAuthService):
     @staticmethod
-    def refresh_token(token: PlatformToken) -> str:
-        if token.expire_at and token.expire_at > datetime.now(timezone.utc):
+    def refresh_token(connection: PlatformConnection) -> str:
+        token = connection.token
+        
+        if token.expire_at and token.expire_at.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
             return token.access_token
 
         if not token.refresh_token:

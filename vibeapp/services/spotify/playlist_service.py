@@ -4,17 +4,18 @@ import time
 
 from vibeapp.extensions import db
 from vibeapp.models.platform_token import PlatformToken
-from vibeapp.utils.token_utils import refresh_access_token
 from vibeapp.models.playlist import Playlist
 from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.services.base_playlist_service import BasePlaylistService
+# from vibeapp.services.spotify.auth_service import 
 from vibeapp.exceptions import PlaylistFetchError
+from vibeapp.services.spotify.auth_service import SpotifyAuthService
 
 class SpotifyPlaylistService(BasePlaylistService):
     def __init__(self, connection: PlatformConnection):
         self.connection = connection
         self.token: PlatformToken = connection.token
-        self.access_token = refresh_access_token(self.connection)
+        self.access_token = SpotifyAuthService.refresh_token(self.connection)
 
     def get_playlists(self) -> list:
         url = "https://api.spotify.com/v1/me/playlists"
