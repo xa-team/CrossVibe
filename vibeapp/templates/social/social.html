@@ -1,0 +1,347 @@
+<!-- vibeapp/public/templates/social.html -->
+{% extends "layout.html" %}
+{% block title %}
+    소셜 허브 | CrossVibe
+{% endblock title %}
+{% block content %}
+    <div class="container mt-4">
+        <!-- 헤더 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>👥 소셜 허브</h2>
+            <a href="{{ url_for('public.home') }}" class="btn btn-outline-secondary">← 홈으로</a>
+        </div>
+        <!-- 사용자명 확인 -->
+        {% if not user.username %}
+            <div class="alert alert-warning">
+                <h5>⚠️ 사용자명이 필요합니다</h5>
+                <p>소셜 기능을 사용하려면 먼저 사용자명을 설정해주세요.</p>
+                <a href="{{ url_for('public.set_username_page') }}"
+                   class="btn btn-primary">🎯 사용자명 설정하기</a>
+            </div>
+        {% else %}
+            <!-- 탭 네비게이션 -->
+            <ul class="nav nav-tabs mb-4" id="socialTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active"
+                            id="add-friends-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#add-friends"
+                            type="button"
+                            role="tab">➕ 친구 추가</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link position-relative"
+                            id="received-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#received"
+                            type="button"
+                            role="tab">
+                        📨 받은 신청
+                        {% if pending_requests_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ pending_requests_count }}
+                            </span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="friends-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#friends"
+                            type="button"
+                            role="tab">👫 내 친구 ({{ friends|length }})</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="sent-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#sent"
+                            type="button"
+                            role="tab">📤 보낸 신청</button>
+                </li>
+            </ul>
+            <!-- 탭 컨텐츠 -->
+            <div class="tab-content" id="socialTabsContent">
+                <!-- 친구 추가 탭 -->
+                <div class="tab-pane fade show active" id="add-friends" role="tabpanel">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">🔍 친구 찾기</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="friendSearchForm">
+                                        <div class="input-group mb-3">
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="friendUsername"
+                                                   placeholder="친구의 사용자명을 입력하세요"
+                                                   maxlength="20">
+                                            <button class="btn btn-success" type="submit">➕ 신청 보내기</button>
+                                        </div>
+                                    </form>
+                                    <div class="alert alert-info">
+                                        <small>
+                                            <strong>💡 팁:</strong> 정확한 사용자명을 입력해주세요.
+                                            대소문자를 구분합니다.
+                                        </small>
+                                    </div>
+                                    <!-- 내 사용자명 정보 -->
+                                    <div class="bg-light p-3 rounded">
+                                        <strong>내 사용자명:</strong>
+                                        <code>{{ user.username }}</code>
+                                        <br>
+                                        <small class="text-muted">친구들에게 이 사용자명으로 알려주세요!</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 내 친구 탭 -->
+                <div class="tab-pane fade" id="friends" role="tabpanel">
+                    {% if friends %}
+                        <div class="row">
+                            {% for friend in friends %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="card-title mb-1">{{ friend.display_name or friend.username }}</h6>
+                                                    <small class="text-muted">
+                                                        {% if friend.platform_connections %}
+                                                            {% for conn in friend.platform_connections %}
+                                                                {% if conn.platform == "spotify" %}🎵 Spotify{% endif %}
+                                                                {% if conn.platform == "youtube" %}▶️ YouTube{% endif %}
+                                                                {% if not loop.last %},{% endif %}
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            연결된 플랫폼 없음
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                                <div>
+                                                    <button class="btn btn-primary btn-sm"
+                                                            onclick="viewFriendProfile('{{ friend.id }}')">
+                                                        👤 프로필
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <!-- 친구 통계 -->
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6>📊 친구 통계</h6>
+                            <p class="mb-0">총 {{ friends|length }}명의 친구와 연결되어 있습니다!</p>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="display-1">👥</div>
+                            <h4>아직 친구가 없습니다</h4>
+                            <p class="text-muted">친구를 추가해서 음악 취향을 공유해보세요!</p>
+                            <button class="btn btn-primary"
+                                    onclick="document.getElementById('add-friends-tab').click()">친구 추가하기</button>
+                        </div>
+                    {% endif %}
+                </div>
+                <!-- 받은 신청 탭 -->
+                <div class="tab-pane fade" id="received" role="tabpanel">
+                    {% if pending_requests %}
+                        <div class="row">
+                            {% for req in pending_requests %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="card-title mb-1">{{ req.requester.display_name or req.requester.username }}</h6>
+                                                    <small class="text-muted">{{ req.created_at|kst }}</small>
+                                                </div>
+                                                <div>
+                                                    <button class="btn btn-success btn-sm me-1"
+                                                            onclick="respondToRequest({{ req.id }}, 'accept')">
+                                                        ✅ 수락
+                                                    </button>
+                                                    <button class="btn btn-danger btn-sm"
+                                                            onclick="respondToRequest({{ req.id }}, 'reject')">
+                                                        ❌ 거절
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="display-1">📭</div>
+                            <h4>받은 친구 신청이 없습니다</h4>
+                            <p class="text-muted">새로운 친구들이 연결되기를 기다리고 있어요!</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <!-- 보낸 신청 탭 -->
+                <div class="tab-pane fade" id="sent" role="tabpanel">
+                    {% if sent_requests %}
+                        <div class="row">
+                            {% for req in sent_requests %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="card-title mb-1">{{ req.receiver.display_name or req.receiver.username }}</h6>
+                                                    <small class="text-muted">{{ req.created_at|kst }}에 전송</small>
+                                                </div>
+                                                <div>
+                                                    {% if req.status == "pending" %}
+                                                        <span class="badge bg-warning me-1">⏳ 대기중</span>
+                                                        <button class="btn btn-danger btn-sm" onclick="cancelRequest({{ req.id }})">취소</button>
+                                                    {% elif req.status == "accepted" %}
+                                                        <span class="badge bg-success">✅ 수락됨</span>
+                                                    {% elif req.status == "rejected" %}
+                                                        <span class="badge bg-danger">❌ 거절됨</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <!-- 신청 현황 통계 -->
+                        {% set pending_count = sent_requests | selectattr("status", "equalto", "pending") | list | length %}
+                        {% set accepted_count = sent_requests | selectattr("status", "equalto", "accepted") | list | length %}
+                        {% set rejected_count = sent_requests | selectattr("status", "equalto", "rejected") | list | length %}
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6>📊 신청 현황</h6>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="badge bg-warning fs-6">⏳ 대기: {{ pending_count }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="badge bg-success fs-6">✅ 수락: {{ accepted_count }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="badge bg-danger fs-6">❌ 거절: {{ rejected_count }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="display-1">📤</div>
+                            <h4>보낸 친구 신청이 없습니다</h4>
+                            <p class="text-muted">새로운 친구들에게 신청을 보내보세요!</p>
+                            <button class="btn btn-primary"
+                                    onclick="document.getElementById('add-friends-tab').click()">친구 신청 보내기</button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    <script>
+// 친구 신청 보내기
+document.getElementById('friendSearchForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('friendUsername').value.trim();
+    if (!username) {
+        alert('친구의 사용자명을 입력해주세요.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/send-friend-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username })
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('친구 신청을 보냈습니다!');
+            document.getElementById('friendUsername').value = '';
+            location.reload(); // 페이지 새로고침하여 보낸 신청 탭 업데이트
+        } else {
+            alert('오류: ' + result.error);
+        }
+    } catch (error) {
+        alert('네트워크 오류가 발생했습니다.');
+    }
+});
+
+// 친구 신청 응답
+async function respondToRequest(requestId, action) {
+    const actionText = action === 'accept' ? '수락' : '거절';
+    
+    if (!confirm(`정말로 이 친구 신청을 ${actionText}하시겠습니까?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/respond-friend-request/${requestId}/${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert(result.message);
+            location.reload();
+        } else {
+            alert('오류: ' + result.error);
+        }
+    } catch (error) {
+        alert('네트워크 오류가 발생했습니다.');
+    }
+}
+
+// 친구 신청 취소
+async function cancelRequest(requestId) {
+    if (!confirm('정말로 이 친구 신청을 취소하시겠습니까?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/cancel-friend-request/${requestId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert(result.message);
+            location.reload();
+        } else {
+            alert('오류: ' + result.error);
+        }
+    } catch (error) {
+        alert('네트워크 오류가 발생했습니다.');
+    }
+}
+
+// 친구 프로필 보기 (향후 구현)
+function viewFriendProfile(friendId) {
+    alert(`친구 프로필 보기 기능은 곧 구현될 예정입니다! (Friend ID: ${friendId})`);
+    // 향후: window.location.href = `/friend/${friendId}/profile`;
+}
+
+// Enter 키로 친구 신청
+document.getElementById('friendUsername').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('friendSearchForm').dispatchEvent(new Event('submit'));
+    }
+});
+    </script>
+{% endblock content %}
