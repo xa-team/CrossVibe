@@ -19,7 +19,7 @@ class UserService:
     
     @staticmethod
     def get_user_relationship_info(user, current_user_id):
-        """사용자와 현재 사용자 간의 관계 정보 반환"""
+        """대상 사용자와 현재 사용자 간의 관계 정보 반환"""
         is_friend = Friend.are_friends(current_user_id, user.id)
         has_pending_from_me = Friend.get_pending_request(current_user_id, user.id) is not None
         has_pending_to_me = Friend.get_pending_request(user.id, current_user_id) is not None
