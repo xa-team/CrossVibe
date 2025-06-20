@@ -12,9 +12,6 @@ from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.models.platform_token import PlatformToken
 from vibeapp.models.playlist import Playlist
 from vibeapp.models.friend import Friend
-from vibeapp.services.api import get_playlist_service
-from vibeapp.utils.token_utils import refresh_access_token
-# from vibeapp.decorators.auth import login_required
 from vibeapp.exceptions import UnsupportedPlatformError, TokenRefreshError
 
 
