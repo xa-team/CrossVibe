@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from vibeapp.models.platform_token import PlatformToken
+from vibeapp.models.platform_connection import PlatformConnection
 
 class BaseAuthService(ABC):
     @staticmethod
     @abstractmethod
-    def refresh_token(token: PlatformToken) -> str:
+    def refresh_token(connection: PlatformConnection) -> str:
         pass

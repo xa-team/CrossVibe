@@ -1,0 +1,116 @@
+<!-- vibeapp/public/templates/set_username.html -->
+{% extends "layout.html" %}
+{% block title %}
+    사용자명 설정 | CrossVibe
+{% endblock title %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4>👤 사용자명 설정</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <h6>🎯 사용자명이 필요한 이유</h6>
+                            <p class="mb-0">친구들이 당신을 쉽게 찾을 수 있도록 고유한 사용자명을 설정해주세요!</p>
+                        </div>
+                        <form id="usernameForm">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">사용자명</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="username"
+                                       value="{{ user.username or '' }}"
+                                       placeholder="예: music_lover123"
+                                       maxlength="20">
+                                <div class="form-text">영문, 숫자, 언더스코어(_)만 사용 가능 (3-20자)</div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if user.username %}
+                                        ✏️ 사용자명 변경
+                                    {% else %}
+                                        ✅ 사용자명 설정
+                                    {% endif %}
+                                </button>
+                                <a href="{{ url_for('public.settings') }}"
+                                   class="btn btn-outline-secondary">설정에서 변경하기</a>
+                            </div>
+                        </form>
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6>📝 사용자명 규칙</h6>
+                            <ul class="mb-0 small">
+                                <li>3자 이상 20자 이하</li>
+                                <li>영문자, 숫자, 언더스코어(_)만 사용 가능</li>
+                                <li>다른 사용자와 중복될 수 없음</li>
+                                <li>나중에 언제든지 변경 가능</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+document.getElementById('usernameForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value.trim();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    if (!username) {
+        alert('사용자명을 입력해주세요.');
+        return;
+    }
+
+    // 버튼 비활성화 및 로딩 표시
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ 처리중...';
+
+    try {
+        const response = await fetch('/update-username', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username: username })
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert(result.message);
+            window.location.href = "{{ url_for('public.home') }}";
+        } else {
+            alert('오류: ' + result.error);
+        }
+    } catch (error) {
+        alert('네트워크 오류가 발생했습니다.');
+        console.error('Error:', error);
+    } finally {
+        // 버튼 다시 활성화
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+
+// 실시간 유효성 검사
+document.getElementById('username').addEventListener('input', function(e) {
+    const username = e.target.value;
+    const regex = /^[a-zA-Z0-9_]{0,20}$/;
+    
+    if (!regex.test(username)) {
+        e.target.setCustomValidity('영문, 숫자, 언더스코어만 사용하여 20자 이하로 입력해주세요.');
+    } else if (username.length > 0 && username.length < 3) {
+        e.target.setCustomValidity('최소 3자 이상 입력해주세요.');
+    } else {
+        e.target.setCustomValidity('');
+    }
+    
+    e.target.reportValidity();
+});
+    </script>
+{% endblock content %}

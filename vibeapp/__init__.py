@@ -1,29 +1,32 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 
-from vibeapp.extensions import db
+from vibeapp.extensions import db, migrate, login_manager
 from vibeapp.config import Config
 
 #errorhandler import
-from vibeapp.exceptions import PlaylistFetchError, TokenRefreshError, UnsupportedPlatformError
+from vibeapp.exceptions import PlaylistFetchError, TokenRefreshError, UnsupportedPlatformError, FriendRequestError
 
 
 #Blueprint import
-from vibeapp.admin import admin_bp
-from vibeapp.public import public_bp
+from vibeapp.routes import register_routes
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
     db.init_app(app)
+    migrate.init_app(app, db)
+    
+    login_manager.init_app(app)
+    login_manager.login_view = "public.login"
 
     # Blueprint 등록
-    app.register_blueprint(admin_bp, url_prefix="/admin")
-    app.register_blueprint(public_bp)
+    register_routes(app)
     
     with app.app_context():
         db.create_all() # DB 테이블 생성
@@ -40,6 +43,10 @@ def create_app():
     @app.errorhandler(UnsupportedPlatformError)
     def handle_platform_error(e):
         return jsonify({"error": "지원되지 않는 플랫폼입니다", "detail": str(e)}), 400
+    
+    @app.errorhandler(FriendRequestError)
+    def handle_friend_request_error(e):
+        return jsonify({"error": "친구 신청 실패", "detail": str(e)}), 400
         
     def kst_format(dt):
         if dt is None:

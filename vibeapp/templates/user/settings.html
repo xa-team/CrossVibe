@@ -1,0 +1,232 @@
+<!-- vibeapp/public/templates/settings.html -->
+{% extends "layout.html" %}
+{% block title %}
+    설정 | CrossVibe
+{% endblock title %}
+{% block content %}
+    <div class="container mt-4">
+        <!-- 헤더 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>⚙️ 설정</h2>
+            <a href="{{ url_for('public.home') }}" class="btn btn-outline-secondary">← 홈으로</a>
+        </div>
+        <div class="row">
+            <!-- 계정 설정 -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">👤 계정 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- 사용자명 설정 -->
+                        <div class="mb-3">
+                            <label class="form-label">사용자명</label>
+                            <div class="input-group">
+                                <input type="text"
+                                       class="form-control"
+                                       id="usernameInput"
+                                       value="{{ user.username or '' }}"
+                                       placeholder="사용자명을 입력하세요"
+                                       maxlength="20">
+                                <button class="btn btn-outline-secondary" onclick="updateUsername()">변경</button>
+                            </div>
+                            <div class="form-text">영문, 숫자, 언더스코어(_)만 사용 가능 (3-20자)</div>
+                        </div>
+                        <!-- 표시명 -->
+                        <div class="mb-3">
+                            <label class="form-label">표시명</label>
+                            <input type="text"
+                                   class="form-control"
+                                   value="{{ user.display_name or '' }}"
+                                   readonly>
+                            <div class="form-text">플랫폼에서 가져온 이름입니다</div>
+                        </div>
+                        <!-- 계정 권한 -->
+                        <div class="mb-3">
+                            <label class="form-label">계정 권한</label>
+                            <div class="form-control-plaintext">
+                                {% if user.is_admin %}
+                                    🛡️ 관리자
+                                {% else %}
+                                    👤 일반 사용자
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 플랫폼 연결 -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">🔗 플랫폼 연결</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if user.platform_connections %}
+                            {% for conn in user.platform_connections %}
+                                <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                                    <div>
+                                        {% if conn.platform == "spotify" %}
+                                            <img src="https://cdn-icons-png.flaticon.com/24/174/174872.png"
+                                                 alt="Spotify"
+                                                 width="24"
+                                                 height="24">
+                                            <strong>Spotify</strong>
+                                        {% elif conn.platform == "youtube" %}
+                                            <img src="https://cdn-icons-png.flaticon.com/24/1384/1384060.png"
+                                                 alt="YouTube"
+                                                 width="24"
+                                                 height="24">
+                                            <strong>YouTube Music</strong>
+                                        {% else %}
+                                            <strong>{{ conn.platform|title }}</strong>
+                                        {% endif %}
+                                        <br>
+                                        <small class="text-muted">토큰 만료: {{ conn.token.expire_at|kst if conn.token.expire_at else "없음" }}</small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-success">연결됨</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted">
+                                <p>연결된 플랫폼이 없습니다</p>
+                            </div>
+                        {% endif %}
+                        <!-- 새 플랫폼 연결 -->
+                        <div class="mt-3">
+                            <h6>새 플랫폼 연결</h6>
+                            <div class="d-grid gap-2">
+                                {% set available_platforms = ["spotify", "youtube"] %}
+                                {% set connected_platforms = user.platform_connections|map(attribute='platform')|list %}
+                                {% for platform in available_platforms %}
+                                    {% if platform not in connected_platforms %}
+                                        {% if platform == "spotify" %}
+                                            <a href="{{ url_for('public.login_platform', platform='spotify') }}"
+                                               class="btn btn-outline-success btn-sm">🎵 Spotify 연결</a>
+                                        {% elif platform == "youtube" %}
+                                            <a href="{{ url_for('public.login_platform', platform='youtube') }}"
+                                               class="btn btn-outline-danger btn-sm">▶️ YouTube Music 연결</a>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 통계 정보 -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📊 내 활동 통계</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="h4 text-primary">{{ user.get_friends() |length }}</div>
+                                <div class="text-muted">친구</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="h4 text-success">{{ user.platform_connections|length }}</div>
+                                <div class="text-muted">연결된 플랫폼</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="h4 text-warning">{{ user.get_pending_friend_requests_count() }}</div>
+                                <div class="text-muted">받은 신청</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="h4 text-info">
+                                    {% set total_playlists = 0 %}
+                                    {% for conn in user.platform_connections %}
+                                        {% set total_playlists = total_playlists + conn.playlists|length %}
+                                    {% endfor %}
+                                    {{ total_playlists }}
+                                </div>
+                                <div class="text-muted">플레이리스트</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 위험한 작업 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">⚠️ 위험한 작업</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">이 작업들은 되돌릴 수 없습니다. 신중하게 결정해주세요.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-outline-warning btn-sm" onclick="clearAllData()">🗑️ 모든 데이터 초기화</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteAccount()">💀 계정 삭제</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+// 사용자명 업데이트
+async function updateUsername() {
+    const username = document.getElementById('usernameInput').value.trim();
+    
+    if (!username) {
+        alert('사용자명을 입력해주세요.');
+        return;
+    }
+
+    // 유효성 검사
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+        alert('사용자명은 영문, 숫자, 언더스코어만 사용하여 3-20자로 입력해주세요.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/update-username', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username })
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert(result.message);
+            location.reload();
+        } else {
+            alert('오류: ' + result.error);
+        }
+    } catch (error) {
+        alert('네트워크 오류가 발생했습니다.');
+    }
+}
+
+// 모든 데이터 초기화 (향후 구현)
+function clearAllData() {
+    if (confirm('정말로 모든 데이터를 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+        alert('이 기능은 아직 구현되지 않았습니다.');
+    }
+}
+
+// 계정 삭제 (향후 구현)
+function deleteAccount() {
+    const confirmText = prompt('계정을 삭제하려면 "DELETE"를 입력하세요:');
+    if (confirmText === 'DELETE') {
+        alert('이 기능은 아직 구현되지 않았습니다.');
+    }
+}
+
+// Enter 키로 사용자명 업데이트
+document.getElementById('usernameInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        updateUsername();
+    }
+});
+    </script>
+{% endblock content %}

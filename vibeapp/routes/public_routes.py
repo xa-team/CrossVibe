@@ -1,7 +1,9 @@
 import requests
-from flask import Blueprint, redirect, render_template, request, session, url_for
+from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
+
+from flask_login import current_user, login_required, login_user, logout_user
 
 from vibeapp.config import Config
 from vibeapp.extensions import db
@@ -9,19 +11,14 @@ from vibeapp.models.user import User
 from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.models.platform_token import PlatformToken
 from vibeapp.models.playlist import Playlist
+from vibeapp.models.friend import Friend
 from vibeapp.services.api import get_playlist_service
 from vibeapp.utils.token_utils import refresh_access_token
-from vibeapp.utils.auth_utils import login_required
+# from vibeapp.decorators.auth import login_required
 from vibeapp.exceptions import UnsupportedPlatformError, TokenRefreshError
 
 
-public_bp = Blueprint(
-    "public",
-    __name__,
-    
-    #Blueprint가 각자 독립적인 template 디렉토리 사용을 위해 template_folder 옵션 명시
-    template_folder="templates"
-)
+public_bp = Blueprint("public", __name__,)
 
 
 # 초기화면 라우터
@@ -29,9 +26,88 @@ public_bp = Blueprint(
 def home():
     user_data = session.get("user")
     user = None
-    if user_data:
+    pending_requests_count = 0
+    
+    if user_data and current_user.is_authenticated:
         user = User.query.get(user_data["id"])
-    return render_template("home.html", user=user)
+        if user:
+            pending_requests_count = user.get_pending_friend_requests_count()
+    elif current_user.is_authenticated:
+        user = current_user
+        pending_requests_count = user.get_pending_friend_requests_count()
+    
+    return render_template("public/home.html", user=user, pending_requests_count=pending_requests_count)
+    
+    
+# 설정 페이지
+@public_bp.route("/settings")
+@login_required
+def settings():
+    user_data = session.get("user")
+    if user_data:
+        current_user_obj = User.query.get(user_data["id"])
+    else:
+        current_user_obj = current_user
+    return render_template("user/settings.html", user=current_user_obj)
+
+
+# 사용자명 설정 페이지
+@public_bp.route("/set-username")
+@login_required
+def set_username_page():
+    user_data = session.get("user")
+    if user_data:
+        current_user_obj = User.query.get(user_data["id"])
+    else:
+        current_user_obj = current_user
+    
+    # 이미 사용자명이 있으면 설정 페이지로 리다이렉트
+    if current_user_obj.username:
+        return redirect(url_for("public.settings"))
+    
+    return render_template("user/set_username.html", user=current_user_obj)
+
+
+# 사용자명 설정/변경 처리
+@public_bp.route("/update-username", methods=["POST"])
+@login_required
+def update_username():
+    try:
+        data = request.get_json()
+        new_username = data.get("username", "").strip()
+        
+        if not new_username:
+            return jsonify({"error": "사용자명을 입력해주세요."}), 400
+        
+        # 사용자명 유효성 검사 (영문, 숫자, 언더스코어만 허용, 3-20자)
+        import re
+        if not re.match(r'^[a-zA-Z0-9_]{3,20}$', new_username):
+            return jsonify({"error": "사용자명은 영문, 숫자, 언더스코어만 사용하여 3-20자로 입력해주세요."}), 400
+        
+        user_data = session.get("user")
+        if user_data:
+            current_user_obj = User.query.get(user_data["id"])
+        else:
+            current_user_obj = current_user
+        
+        # 중복 확인 (자신 제외)
+        existing_user = User.query.filter(
+            User.username == new_username,
+            User.id != current_user_obj.id
+        ).first()
+        
+        if existing_user:
+            return jsonify({"error": "이미 사용중인 사용자명입니다."}), 400
+        
+        # 사용자명 업데이트
+        current_user_obj.username = new_username
+        db.session.commit()
+        
+        return jsonify({"success": True, "message": "사용자명이 설정되었습니다!"}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "사용자명 설정 중 오류가 발생했습니다."}), 500
     
 
 # 로그인 라우터
@@ -56,6 +132,7 @@ def login_platform(platform):
 # 로그아웃 라우터
 @public_bp.route("/logout")
 def logout():
+    logout_user()
     session.pop("user", None)
     return redirect(url_for("public.home"))
 
@@ -95,6 +172,9 @@ def callback_platform(platform):
         headers={"Authorization": f"Bearer {access_token}"}
     )
     if user_info_res.status_code != 200:
+        print("📡 user_info_res.status:", user_info_res.status_code)
+        print("📡 user_info_res.text:", user_info_res.text) 
+        
         raise TokenRefreshError(f"사용자 정보 요청 실패", 400)
 
     user_info = user_info_res.json()
@@ -142,6 +222,9 @@ def callback_platform(platform):
         db.session.add(connection)
         db.session.commit()
 
+    login_user(user)
+    
+
     # 6. 세션 저장 (멀티플랫폼 대응)
     session_user = session.get("user", {"id": user.id, "platforms": {}})
     session_user["platforms"][platform] = {
@@ -150,44 +233,19 @@ def callback_platform(platform):
     }
     session_user["active_platform"] = platform
     session["user"] = session_user
-    
+
+    # 사용자명이 없으면 설정 페이지로 리다이렉트
+    if not user.username:
+        return redirect(url_for("public.set_username_page"))
+
     return redirect(url_for("public.home"))
 
-#플레이리스트 라우터
-@public_bp.route("/my-playlists")
-@login_required
-def my_playlists():
-    user_data = session.get("user")
-    active_platform = user_data.get("active_platform")
-    platform_info = user_data["platforms"].get(active_platform)
-    
-    connection_id = platform_info["connection_id"]
-    connection = PlatformConnection.query.get(connection_id)
-    
-    service = get_playlist_service(connection)
-    playlists_data = service.get_playlists()
-    service.save_or_update_playlists(playlists_data)
-    
-    #DB에서 가져오기 (정렬 포함)
-    playlists = Playlist.query.filter_by(
-        platform=connection.platform,
-        platform_user_id=connection.platform_user_id,
-    ).order_by(Playlist.name.asc()).all()
-    
-    return render_template("my_playlists.html", playlists=playlists, platform=active_platform)
 
 # 테스트용 관리자 권한 설정
 @public_bp.route("/make-admin")
+@login_required
 def make_admin():
-    user_session = session.get("user")
-    if not user_session:
-        return "세션에 사용자 정보가 없습니다.", 400
-
-    user_id = user_session.get("id")
-    if not user_id:
-        return "세션에 사용자 ID가 없습니다.", 400
-
-    user = User.query.get(user_id)
+    user = User.query.get(current_user.id)
     if not user:
         return "DB에서 사용자를 찾을 수 없습니다.", 404
 
