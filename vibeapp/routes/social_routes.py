@@ -7,6 +7,8 @@ from vibeapp.models.user import User
 from vibeapp.models.friend import Friend
 from vibeapp.exceptions import FriendRequestError
 
+from vibeapp.services.user_services import UserService, FriendService
+
 social_bp = Blueprint("friend", __name__)
 
 
@@ -62,7 +64,7 @@ def send_friend_request():
             current_user_obj = current_user
         
         # 대상 사용자 찾기
-        target_user = User.query.filter_by(username=target_username).first()
+        target_user = User.find_by_username(target_username)
         if not target_user:
             return jsonify({"error": "존재하지 않는 사용자입니다."}), 404
         
@@ -202,32 +204,42 @@ def sent_requests():
     return redirect(url_for("friend.social") + "#sent")
 
 
-#유틸리티 API 라우트
-@social_bp.route("/api/friends", methods=["GET"])
+@social_bp.route("/api/search-users", methods=["GET"])
 @login_required
-def get_friends_api():
-    """친구 목록 API"""
+def search_users():
+    """사용자 검색 API(부분 일치)"""
+    query = request.args.get("q", "").strip()
+    
     user_data = session.get("user")
     if user_data:
         current_user_obj = User.query.get(user_data["id"])
     else:
         current_user_obj = current_user
     
-    friends = Friend.get_friends_for_user(current_user_obj.id)
     
-    friends_data = [{
-        "id": friend.id,
-        "username": friend.username,
-        "display_name": friend.display_name,
-        "platform_connections": [conn.platform for conn in friend.platform_connections]
-    } for friend in friends]
+    users = UserService.search_users(query, current_user_obj.id)
     
-    return jsonify({
-        "friends": friends_data,
-        "count": len(friends_data)
-    }), 200
+    users_data = [
+        UserService.get_user_relationship_info(user, current_user_obj.id)
+        for user in users
+    ]
+    
+    return jsonify({"users": users_data}), 200
 
 
+@social_bp.route("/api/friends", methods=["GET"])
+@login_required
+def get_friends_api():
+    """친구 목록"""
+    user_data = session.get("user")
+    if user_data:
+        current_user_obj = User.query.get(user_data["id"])
+    else:
+        current_user_obj = current_user
+        
+    return jsonify(FriendService.get_friends_list(current_user_obj.id)), 200
+    
+    
 @social_bp.route("/api/friend-requests", methods=["GET"])
 @login_required
 def get_friend_requests_api():
@@ -237,23 +249,5 @@ def get_friend_requests_api():
         current_user_obj = User.query.get(user_data["id"])
     else:
         current_user_obj = current_user
-    
-    pending_requests = Friend.query.filter_by(
-        receiver_id=current_user_obj.id,
-        status="pending"
-    ).all()
-    
-    requests_data = [{
-        "id": req.id,
-        "requester": {
-            "id": req.requester.id,
-            "username": req.requester.username,
-            "display_name": req.requester.display_name
-        },
-        "created_at": req.created_at.isoformat() if req.created_at else None
-    } for req in pending_requests]
-    
-    return jsonify({
-        "requests": requests_data,
-        "count": len(requests_data)
-    }), 200
+        
+    return jsonify(FriendService.get_pending_requests(current_user_obj.id)), 200
