@@ -3,7 +3,6 @@ from flask_login import login_required
 
 from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.models.playlist import Playlist
-from vibeapp.services.spotify.playlist_service import SpotifyPlaylistService
 from vibeapp.services.playlist_service import PlaylistService
 
 
