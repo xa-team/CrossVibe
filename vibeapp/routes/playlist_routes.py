@@ -3,7 +3,7 @@ from flask_login import login_required
 
 from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.models.playlist import Playlist
-from vibeapp.services.api import get_playlist_service
+from vibeapp.services.spotify.playlist_service import SpotifyPlaylistService
 
 
 playlist_bp = Blueprint("playlist", __name__,)
@@ -19,7 +19,7 @@ def my_playlists():
     connection_id = platform_info["connection_id"]
     connection = PlatformConnection.query.get(connection_id)
     
-    service = get_playlist_service(connection)
+    service = SpotifyPlaylistService(connection)
     playlists_data = service.get_playlists()
     service.save_or_update_playlists(playlists_data)
     

@@ -15,11 +15,11 @@ class SpotifyPlaylistService(BasePlaylistService):
     def __init__(self, connection: PlatformConnection):
         self.connection = connection
         self.token: PlatformToken = connection.token
-        self.access_token = SpotifyAuthService.refresh_token(self.connection)
+        self.token.access_token = SpotifyAuthService.refresh_token(self.connection)
 
     def get_playlists(self) -> list:
         url = "https://api.spotify.com/v1/me/playlists"
-        headers = {"Authorization": f"Bearer {self.access_token}"}
+        headers = {"Authorization": f"Bearer {self.token.access_token}"}
         playlists = []
         limit = 50
         offset = 0
