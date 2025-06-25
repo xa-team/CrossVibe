@@ -12,11 +12,72 @@
         <!-- Bootstrap CDN -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
               rel="stylesheet">
+        <!-- Custom CSS Files -->
+        <link href="{{ url_for('static', filename='css/base.css') }}"
+              rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/search.css') }}"
+              rel="stylesheet">
+        <!-- 페이지별 CSS -->
+        {% if request.endpoint and 'social' in request.endpoint %}
+            <link href="{{ url_for('static', filename='css/social.css') }}"
+                  rel="stylesheet">
+        {% endif %}
+        <!-- 반응형 CSS (항상 마지막에 로드) -->
+        <link href="{{ url_for('static', filename='css/responsive.css') }}"
+              rel="stylesheet">
     </head>
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
             <div class="container">
-                <a class="navbar-brand">CrossVibe</a>
+                <a class="navbar-brand" href="{{ url_for('public.home') }}">CrossVibe</a>
+                <!-- 검색 바 - 로그인한 사용자만 -->
+                {% if session.user %}
+                    <div class="navbar-search mx-auto d-none d-md-block">
+                        <div class="position-relative">
+                            <input type="text"
+                                   class="form-control"
+                                   id="userSearchInput"
+                                   placeholder="🔍 친구 찾기..."
+                                   autocomplete="off">
+                            <div id="searchDropdown" class="search-dropdown d-none"></div>
+                        </div>
+                    </div>
+                    <!-- 모바일용 토글 버튼 -->
+                    <button class="navbar-toggler"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#navbarContent">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <!-- 네비게이션 메뉴 -->
+                    <div class="collapse navbar-collapse" id="navbarContent">
+                        <!-- 모바일용 검색 -->
+                        <div class="d-md-none mt-3">
+                            <div class="position-relative">
+                                <input type="text"
+                                       class="form-control"
+                                       id="userSearchInputMobile"
+                                       placeholder="🔍 친구 찾기..."
+                                       autocomplete="off">
+                                <div id="searchDropdownMobile" class="search-dropdown d-none"></div>
+                            </div>
+                        </div>
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('public.home') }}">🏠 홈</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('social.main') }}">👥 소셜</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('playlist.my_playlists') }}">🎵 플레이리스트</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('public.settings') }}">⚙️ 설정</a>
+                            </li>
+                        </ul>
+                    </div>
+                {% endif %}
             </div>
         </nav>
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -42,7 +103,20 @@
         <footer class="text-center mt-5 mb-3 text-muted">
             <small>© 2025 CrossVibe</small>
         </footer>
-        <!-- Optional JavaScript -->
+        <!-- Bootstrap JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Core JavaScript Files -->
+        {% if session.user %}
+            <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+            <script src="{{ url_for('static', filename='js/search.js') }}"></script>
+            <!-- 페이지별 JavaScript -->
+            {% if request.endpoint == 'social.main' %}
+                <script src="{{ url_for('static', filename='js/friends.js') }}"></script>
+                <script src="{{ url_for('static', filename='js/social.js') }}"></script>
+            {% elif request.endpoint == 'social.user_profile' %}
+                <script src="{{ url_for('static', filename='js/friends.js') }}"></script>
+                <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+            {% endif %}
+        {% endif %}
     </body>
 </html>
