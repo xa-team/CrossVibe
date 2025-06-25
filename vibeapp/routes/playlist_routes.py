@@ -3,7 +3,7 @@ from flask_login import login_required
 
 from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.models.playlist import Playlist
-from vibeapp.services.api import get_playlist_service
+from vibeapp.services.playlist_service import PlaylistService
 
 
 playlist_bp = Blueprint("playlist", __name__,)
@@ -19,9 +19,8 @@ def my_playlists():
     connection_id = platform_info["connection_id"]
     connection = PlatformConnection.query.get(connection_id)
     
-    service = get_playlist_service(connection)
-    playlists_data = service.get_playlists()
-    service.save_or_update_playlists(playlists_data)
+    playlist_service = PlaylistService()
+    playlist_service.get_and_save_playlists(connection)
     
     #DB에서 가져오기 (정렬 포함)
     playlists = Playlist.query.filter_by(

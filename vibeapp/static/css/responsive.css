@@ -1,0 +1,564 @@
+/* ===== 반응형 디자인 ===== */
+
+/* ===== 대형 데스크톱 (1200px 이상) ===== */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+  }
+
+  .navbar-search {
+    max-width: 500px;
+  }
+
+  .social-hub-header {
+    padding: 3rem 0;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ===== 중형 데스크톱 (992px - 1199px) ===== */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .navbar-search {
+    max-width: 400px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ===== 태블릿 (768px - 991px) ===== */
+@media (max-width: 991px) {
+  /* 네비게이션 */
+  .navbar-search {
+    max-width: 100%;
+    margin-top: 1rem;
+    order: 3;
+  }
+
+  .navbar-nav {
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  /* 검색 드롭다운 */
+  .search-dropdown {
+    max-height: 250px;
+  }
+
+  /* 소셜 허브 */
+  .social-hub-header {
+    padding: 1.5rem 0;
+    text-align: center;
+  }
+
+  .social-tabs .nav-link {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* 친구 카드 */
+  .friend-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .friend-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  /* 요청 아이템 */
+  .request-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .request-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* 사용자 아바타 */
+  .user-avatar-lg {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+  }
+
+  /* 통계 */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  /* 검색 영역 */
+  .friend-search-section {
+    padding: 1rem;
+  }
+
+  .search-tips {
+    font-size: 0.8rem;
+  }
+}
+
+/* ===== 모바일 (576px - 767px) ===== */
+@media (max-width: 767px) {
+  /* 기본 레이아웃 */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* 네비게이션 */
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+
+  .navbar-brand {
+    font-size: 1.125rem;
+  }
+
+  /* 검색 */
+  .search-dropdown {
+    max-height: 200px;
+  }
+
+  .search-user-item {
+    padding: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .search-user-actions {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .search-action-button {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+
+  /* 소셜 허브 */
+  .social-hub-header {
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+  }
+
+  .social-hub-header h1 {
+    font-size: 1.75rem;
+  }
+
+  /* 탭 */
+  .social-tabs {
+    margin-bottom: 1rem;
+  }
+
+  .social-tabs .nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .social-tabs .nav-link .badge {
+    font-size: 0.65rem;
+    padding: 0.125rem 0.375rem;
+  }
+
+  /* 카드 */
+  .friend-card-body {
+    padding: 1rem;
+  }
+
+  .friend-info {
+    margin-bottom: 0.75rem;
+  }
+
+  .friend-details h6 {
+    font-size: 0.95rem;
+  }
+
+  .friend-platforms {
+    font-size: 0.8rem;
+  }
+
+  /* 요청 아이템 */
+  .request-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .request-details h6 {
+    font-size: 0.95rem;
+  }
+
+  .request-time {
+    font-size: 0.8rem;
+  }
+
+  /* 사용자 아바타 */
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
+
+  .user-avatar-lg {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+
+  .user-avatar-md {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
+
+  /* 버튼 */
+  .social-action-btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+
+  .btn-friend-action {
+    font-size: 0.8rem;
+    padding: 0.375rem 0.75rem;
+  }
+
+  /* 통계 */
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .stat-item {
+    padding: 0.75rem;
+  }
+
+  .stat-number {
+    font-size: 1.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+  }
+
+  /* 빈 상태 */
+  .empty-state {
+    padding: 2rem 0.5rem;
+  }
+
+  .empty-state-icon {
+    font-size: 2.5rem;
+  }
+
+  .empty-state-title {
+    font-size: 1.25rem;
+  }
+
+  .empty-state-description {
+    font-size: 0.9rem;
+  }
+
+  /* 검색 영역 */
+  .friend-search-section {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .friend-search-header h5 {
+    font-size: 1rem;
+  }
+
+  /* 소셜 검색 결과 */
+  .social-search-results .search-user-item {
+    margin: 2px;
+    padding: 0.5rem;
+  }
+}
+
+/* ===== 소형 모바일 (575px 이하) ===== */
+@media (max-width: 575px) {
+  /* 기본 레이아웃 */
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* 네비게이션 */
+  .navbar {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .navbar-brand {
+    font-size: 1rem;
+  }
+
+  /* 검색 */
+  .navbar-search .form-control {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    padding-left: 2rem;
+  }
+
+  .search-icon {
+    left: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .search-user-item {
+    padding: 0.5rem;
+  }
+
+  .search-user-name {
+    font-size: 0.875rem;
+  }
+
+  .search-user-username {
+    font-size: 0.75rem;
+  }
+
+  .search-user-platforms {
+    font-size: 0.7rem;
+  }
+
+  /* 소셜 허브 */
+  .social-hub-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .social-hub-header p {
+    font-size: 0.9rem;
+  }
+
+  /* 탭 */
+  .social-tabs .nav-link {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  /* 카드 */
+  .friend-card-body {
+    padding: 0.75rem;
+  }
+
+  .friend-details h6 {
+    font-size: 0.875rem;
+  }
+
+  .friend-platforms {
+    font-size: 0.75rem;
+  }
+
+  /* 요청 아이템 */
+  .request-item {
+    padding: 0.5rem;
+  }
+
+  .request-details h6 {
+    font-size: 0.875rem;
+  }
+
+  .request-time {
+    font-size: 0.75rem;
+  }
+
+  /* 사용자 아바타 */
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+
+  .user-avatar-lg {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+  }
+
+  .user-avatar-md {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .user-avatar-sm {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+  }
+
+  /* 버튼 */
+  .social-action-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+
+  .btn-friend-action {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    min-width: 60px;
+  }
+
+  /* 배지 */
+  .relationship-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* 스켈레톤 */
+  .skeleton-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .skeleton-text {
+    height: 14px;
+  }
+
+  .skeleton-text-small {
+    height: 10px;
+  }
+
+  .skeleton-button {
+    height: 28px;
+    width: 60px;
+  }
+
+  /* 검색 영역 */
+  .friend-search-section {
+    padding: 0.5rem;
+  }
+
+  .friend-search-header h5 {
+    font-size: 0.9rem;
+  }
+
+  .search-tips {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  .user-info-display {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* ===== 가로 모드 (모바일 랜드스케이프) ===== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .social-hub-header {
+    padding: 0.75rem 0;
+    margin-bottom: 1rem;
+  }
+
+  .search-dropdown {
+    max-height: 150px;
+  }
+
+  .scrollable-card-body {
+    max-height: 200px;
+  }
+
+  .empty-state {
+    padding: 1rem;
+  }
+
+  .empty-state-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* ===== 고대비 모드 지원 ===== */
+@media (prefers-contrast: high) {
+  .search-dropdown {
+    border: 2px solid #000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .search-user-item:hover {
+    background-color: #f0f0f0;
+    border: 1px solid #000;
+  }
+
+  .friend-card {
+    border: 1px solid #000;
+  }
+
+  .request-item {
+    border: 1px solid #000;
+  }
+}
+
+/* ===== 다크 모드 지원 (향후 확장용) ===== */
+@media (prefers-color-scheme: dark) {
+  .search-dropdown {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: white;
+  }
+
+  .search-user-item:hover {
+    background-color: #4a5568;
+  }
+
+  .friend-card {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: white;
+  }
+
+  .request-item {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: white;
+  }
+
+  .social-search-results .search-results-wrapper {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+
+  .social-search-results .search-user-item {
+    background: #4a5568;
+    border-color: #718096;
+    color: white;
+  }
+}
+
+/* ===== 프린트 스타일 ===== */
+@media print {
+  .navbar,
+  .search-dropdown,
+  .social-action-btn,
+  .btn {
+    display: none !important;
+  }
+
+  .friend-card,
+  .request-item {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  .social-hub-header {
+    background: none !important;
+    color: #000 !important;
+  }
+}

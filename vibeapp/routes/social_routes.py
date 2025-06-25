@@ -9,12 +9,12 @@ from vibeapp.exceptions import FriendRequestError
 
 from vibeapp.services.user_services import UserService, FriendService
 
-social_bp = Blueprint("friend", __name__)
+social_bp = Blueprint("social", __name__)
 
 
 @social_bp.route("/social")
 @login_required
-def social():
+def main():
     """소셜 허브 메인 페이지"""
     user_data = session.get("user")
     if user_data:
@@ -111,6 +111,44 @@ def send_friend_request():
         db.session.rollback()
         return jsonify({"error": "친구 신청 중 오류가 발생했습니다."}), 500
     
+   
+@social_bp.route("/send-friend-request-by-id", methods=["POST"])
+@login_required
+def send_friend_request_by_id():
+    """친구 신청 보내기 (사용자 ID 기반) - 검색 결과에서 직접 신청용"""
+    try:
+        data = request.get_json()
+        target_user_id = data.get("user_id")
+        
+        if not target_user_id:
+            return jsonify({"error": "사용자 ID가 필요합니다."}), 400
+        
+        # 현재 사용자 정보 가져오기
+        user_data = session.get("user")
+        if user_data:
+            current_user_obj = User.query.get(user_data["id"])
+        else:
+            current_user_obj = current_user
+        
+        # 대상 사용자 찾기
+        target_user = User.query.get(target_user_id)
+        if not target_user:
+            return jsonify({"error": "존재하지 않는 사용자입니다."}), 404
+        
+        # User 모델의 메서드 활용
+        try:
+            current_user_obj.send_friend_request(target_user.id)
+            return jsonify({
+                "success": True,
+                "message": f"{target_user.display_name or target_user.username}님에게 친구 신청을 보냈습니다."
+            }), 200
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "친구 신청 중 오류가 발생했습니다."}), 500
+   
     
 @social_bp.route("/respond-friend-request/<int:request_id>/<action>", methods=["POST"])
 @login_required
@@ -187,21 +225,21 @@ def cancel_web_friend_request(request_id):
 @login_required
 def friend_requests():
     """받은 친구 신청 페이지로 리다이렉트"""
-    return redirect(url_for("friend.social") + "#received")
+    return redirect(url_for("social.main") + "#received")
 
 
 @social_bp.route("/friends")
 @login_required
 def friends_list():
     """친구 목록 페이지로 리다이렉트"""
-    return redirect(url_for("friend.social") + "#friends")
+    return redirect(url_for("social.main") + "#friends")
 
 
 @social_bp.route("/sent-requests")
 @login_required
 def sent_requests():
     """보낸 신청 페이지로 리다이렉트"""
-    return redirect(url_for("friend.social") + "#sent")
+    return redirect(url_for("social.main") + "#sent")
 
 
 @social_bp.route("/api/search-users", methods=["GET"])
@@ -209,6 +247,7 @@ def sent_requests():
 def search_users():
     """사용자 검색 API(부분 일치)"""
     query = request.args.get("q", "").strip()
+    
     
     user_data = session.get("user")
     if user_data:
@@ -251,3 +290,56 @@ def get_friend_requests_api():
         current_user_obj = current_user
         
     return jsonify(FriendService.get_pending_requests(current_user_obj.id)), 200
+
+
+@social_bp.route("/user/<username>")
+@login_required
+def user_profile(username):
+    """사용자 프로필 페이지"""
+    #현재 사용자 정보
+    user_data = session.get("user")
+    if user_data:
+        current_user_obj = User.query.get(user_data["id"])
+    else:
+        current_user_obj = current_user
+       
+        
+    #프로필을 볼 사용자 찾기
+    profile_user = User.find_by_username(username)
+    if not profile_user:
+        return render_template("errors/404.html", message="사용자를 찾을 수 없습니다."), 404
+    
+    
+    #자신의 프로필이라면 설정 페이지로 리다이렉트
+    if profile_user.id == current_user_obj.id:
+        return redirect(url_for("public.settings"))
+    
+    
+    #관계 상태 확인
+    relationship_status = "none"
+    friend_request = None
+    
+    if current_user_obj.is_friend_with(profile_user.id):
+        relationship_status = "friend"
+    elif current_user_obj.has_sent_request_to(profile_user.id):
+        relationship_status = "sent_request"
+        friend_request = Friend.get_pending_request(current_user_obj.id, profile_user.id)
+    elif current_user_obj.has_pending_request_from(profile_user.id):
+        relationship_status = "recieved_request"
+        friend_request = Friend.get_pending_request(profile_user.id, current_user_obj.id)
+        
+    #친구들의 공통 친구 찾기 (친구인 경우에만)
+    mutual_friends = []
+    if relationship_status == "friend":
+        current_user_friends = set(friend.id for friend in current_user_obj.get_friends())
+        profile_user_friends = set(friend.id for friend in profile_user.get_friends())
+        mutual_friend_ids = current_user_friends & profile_user_friends
+        mutual_friends = [User.query.get(fid) for fid in mutual_friend_ids]
+        
+    
+    return render_template("social/user_profile.html",
+                           current_user=current_user_obj,
+                           profile_user=profile_user,
+                           relationship_status=relationship_status,
+                           friend_request=friend_request,
+                           mutual_friends=mutual_friends)

@@ -1,0 +1,212 @@
+{% extends "layout.html" %}
+{% block title %}
+    {{ profile_user.display_name or profile_user.username }} | CrossVibe
+{% endblock title %}
+{% block content %}
+    <div class="container mt-4">
+        <!-- 뒤로가기 버튼 -->
+        <div class="mb-4">
+            <button onclick="history.back()" class="btn btn-outline-secondary">← 뒤로가기</button>
+        </div>
+        <!-- 프로필 헤더 -->
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <!-- 프로필 아바타 -->
+                        <div class="mb-4">
+                            <div class="user-avatar user-avatar-lg">{{ (profile_user.display_name or profile_user.username)[0].upper() }}</div>
+                        </div>
+                        <!-- 사용자 정보 -->
+                        <h2 class="mb-1">{{ profile_user.display_name or profile_user.username }}</h2>
+                        <p class="text-muted mb-3">@{{ profile_user.username }}</p>
+                        <!-- 플랫폼 연결 정보 -->
+                        <div class="mb-4">
+                            {% if profile_user.platform_connections %}
+                                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                    {% for conn in profile_user.platform_connections %}
+                                        <span class="badge bg-light text-dark px-3 py-2">
+                                            {% if conn.platform == "spotify" %}
+                                                🎵 Spotify
+                                            {% elif conn.platform == "youtube" %}
+                                                ▶️ YouTube Music
+                                            {% else %}
+                                                {{ conn.platform|title }}
+                                            {% endif %}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <span class="text-muted">연결된 플랫폼이 없습니다</span>
+                            {% endif %}
+                        </div>
+                        <!-- 관계 상태에 따른 액션 버튼 -->
+                        <div class="mb-4">
+                            {% if relationship_status == "friend" %}
+                                <button class="btn btn-success btn-lg" disabled>👫 친구</button>
+                                <button class="btn btn-outline-primary ms-2"
+                                        onclick="UserProfile.sendMessage()">💬 메시지 (준비중)</button>
+                            {% elif relationship_status == "sent_request" %}
+                                <button class="btn btn-warning btn-lg" disabled>⏳ 친구 신청을 보냈습니다</button>
+                                <button class="btn btn-outline-danger ms-2"
+                                        onclick="UserProfile.cancelFriendRequest({{ friend_request.id }})">취소</button>
+                            {% elif relationship_status == "received_request" %}
+                                <button class="btn btn-info btn-lg" disabled>📨 친구 신청을 받았습니다</button>
+                                <div class="mt-2">
+                                    <button class="btn btn-success"
+                                            onclick="UserProfile.respondToRequest({{ friend_request.id }}, 'accept')">
+                                        ✅ 수락
+                                    </button>
+                                    <button class="btn btn-danger ms-2"
+                                            onclick="UserProfile.respondToRequest({{ friend_request.id }}, 'reject')">
+                                        ❌ 거절
+                                    </button>
+                                </div>
+                            {% else %}
+                                <button class="btn btn-primary btn-lg"
+                                        onclick="UserProfile.sendFriendRequest('{{ profile_user.username }}')">
+                                    ➕ 친구 신청 보내기
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 통계 정보 -->
+        <div class="row mt-4">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📊 활동 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="h4 text-primary">{{ profile_user.get_friends() |length }}</div>
+                                <div class="text-muted">친구</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="h4 text-success">{{ profile_user.platform_connections|length }}</div>
+                                <div class="text-muted">연결된 플랫폼</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="h4 text-info">
+                                    {% set total_playlists = 0 %}
+                                    {% for conn in profile_user.platform_connections %}
+                                        {% set total_playlists = total_playlists + conn.playlists|length %}
+                                    {% endfor %}
+                                    {{ total_playlists }}
+                                </div>
+                                <div class="text-muted">플레이리스트</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 공통 친구 (친구인 경우에만 표시) -->
+        {% if relationship_status == "friend" and mutual_friends %}
+            <div class="row mt-4">
+                <div class="col-md-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">🤝 공통 친구 ({{ mutual_friends|length }}명)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for friend in mutual_friends[:6] %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="user-avatar user-avatar-sm me-3">{{ (friend.display_name or friend.username)[0].upper() }}</div>
+                                            <div>
+                                                <div class="fw-bold small">{{ friend.display_name or friend.username }}</div>
+                                                <div class="text-muted small">@{{ friend.username }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if mutual_friends|length > 6 %}
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">그 외 {{ mutual_friends|length - 6 }}명의 공통 친구가 더 있습니다.</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <!-- 음악 취향 (친구인 경우에만 표시) -->
+        {% if relationship_status == "friend" %}
+            <div class="row mt-4">
+                <div class="col-md-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">🎵 {{ profile_user.display_name or profile_user.username }}님의 플레이리스트</h5>
+                        </div>
+                        <div class="card-body">
+                            {% set user_playlists = [] %}
+                            {% for conn in profile_user.platform_connections %}
+                                {% for playlist in conn.playlists %}
+                                    {% if playlist.is_public %}
+                                        {% set user_playlists = user_playlists + [playlist] %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                            {% if user_playlists %}
+                                <div class="row">
+                                    {% for playlist in user_playlists[:6] %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border-0 bg-light">
+                                                <div class="card-body py-2">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="me-3">
+                                                            {% if playlist.platform == "spotify" %}
+                                                                🎵
+                                                            {% elif playlist.platform == "youtube" %}
+                                                                ▶️
+                                                            {% else %}
+                                                                🎶
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <div class="fw-bold small">{{ playlist.name }}</div>
+                                                            <div class="text-muted small">{{ playlist.platform|title }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if user_playlists|length > 6 %}
+                                    <div class="text-center mt-3">
+                                        <small class="text-muted">그 외 {{ user_playlists|length - 6 }}개의 플레이리스트가 더 있습니다.</small>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <div class="display-4">🎵</div>
+                                    <p class="mb-0">공개된 플레이리스트가 없습니다.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="row mt-4">
+                <div class="col-md-8 mx-auto">
+                    <div class="card border-secondary">
+                        <div class="card-body text-center py-5">
+                            <div class="display-4 mb-3">🔒</div>
+                            <h5>음악 정보는 친구만 볼 수 있습니다</h5>
+                            <p class="text-muted">{{ profile_user.display_name or profile_user.username }}님과 친구가 되어 음악 취향을 공유해보세요!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock content %}
