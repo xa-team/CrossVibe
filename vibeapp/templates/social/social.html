@@ -4,16 +4,6 @@
     소셜 허브 | CrossVibe
 {% endblock title %}
 {% block content %}
-    <style>
-        .scrollable-card-body {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .search-results {
-            display: none;
-        }
-    </style>
     <div class="container mt-4">
         <!-- 헤더 -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -82,7 +72,7 @@
                                                 </div>
                                                 <div>
                                                     <button class="btn btn-primary btn-sm"
-                                                            onclick="viewFriendProfile('{{ friend.id }}')">
+                                                            onclick="viewFriendProfile('{{ friend.username }}')">
                                                         👤 프로필
                                                     </button>
                                                 </div>
@@ -129,7 +119,7 @@
                                                 onclick="clearSearch()">🗑️ 지우기</button>
                                     </div>
                                     <!-- 검색 결과 영역 -->
-                                    <div id="searchResults" class="mb-3 search-results">
+                                    <div id="searchResults" class="mb-3 search-result">
                                         <div class="border rounded p-2 bg-light">
                                             <h6 class="mb-2">🔍 검색 결과</h6>
                                             <div id="searchResultsList">
@@ -252,149 +242,8 @@
         {% endif %}
     </div>
     <script>
-        let searchTimeout = null;
+        // 기존 social.html의 함수들 (search.js와 통합되지 않은 부분)
         
-        // 실시간 사용자 검색
-        document.getElementById('friendUsername').addEventListener('input', function(e) {
-            const query = e.target.value.trim();
-            
-            // 기존 타이머 제거
-            if (searchTimeout) {
-                clearTimeout(searchTimeout);
-            }
-            
-            // 검색어가 비어있으면 결과 숨기기
-            if (!query) {
-                document.getElementById('searchResults').style.display = 'none';
-                return;
-            }
-            
-            // 300ms 후 검색 실행 (디바운싱)
-            searchTimeout = setTimeout(() => {
-                searchUsers(query);
-            }, 300);
-        });
-        
-        // 사용자 검색 함수
-        async function searchUsers(query) {
-            try {
-                const response = await fetch(`/api/search-users?q=${encodeURIComponent(query)}`);
-                const result = await response.json();
-                
-                if (response.ok) {
-                    displaySearchResults(result.users);
-                } else {
-                    console.error('검색 실패:', result.error);
-                }
-            } catch (error) {
-                console.error('검색 중 오류:', error);
-            }
-        }
-        
-        // 검색 결과 표시
-        function displaySearchResults(users) {
-            const resultsContainer = document.getElementById('searchResultsList');
-            const searchResults = document.getElementById('searchResults');
-            
-            if (users.length === 0) {
-                resultsContainer.innerHTML = '<div class="text-muted text-center py-2">검색 결과가 없습니다</div>';
-            } else {
-                resultsContainer.innerHTML = users.map(user => `
-                    <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-                        <div>
-                            <strong>${user.display_name || user.username}</strong>
-                            ${user.display_name ? `<br><small class="text-muted">@${user.username}</small>` : ''}
-                            <br><small class="text-muted">${user.platform_connections.map(p => 
-                                p === 'spotify' ? '🎵 Spotify' : 
-                                p === 'youtube' ? '▶️ YouTube' : p
-                            ).join(', ') || '연결된 플랫폼 없음'}</small>
-                        </div>
-                        <div>
-                            ${getActionButton(user)}
-                        </div>
-                    </div>
-                `).join('');
-            }
-            
-            searchResults.style.display = 'block';
-        }
-        
-        // 사용자 상태에 따른 액션 버튼 결정
-        function getActionButton(user) {
-            if (user.is_self) {
-                return '<span class="badge bg-secondary">나</span>';
-            } else if (user.is_friend) {
-                return '<span class="badge bg-success">✅ 친구</span>';
-            } else if (user.has_pending_request_from_me) {
-                return '<span class="badge bg-warning">⏳ 신청함</span>';
-            } else if (user.has_pending_request_to_me) {
-                return '<button class="btn btn-primary btn-sm" onclick="respondToExistingRequest(' + user.pending_request_id + ', \'accept\')">✅ 수락</button>';
-            } else {
-                return '<button class="btn btn-success btn-sm" onclick="sendFriendRequestToUser(\'' + user.username + '\')">➕ 신청</button>';
-            }
-        }
-        
-        // 검색 결과에서 친구 신청 보내기
-        async function sendFriendRequestToUser(username) {
-            try {
-                const response = await fetch('/send-friend-request', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: username })
-                });
-
-                const result = await response.json();
-                
-                if (response.ok) {
-                    alert('친구 신청을 보냈습니다!');
-                    // 검색 결과 새로고침
-                    const currentQuery = document.getElementById('friendUsername').value.trim();
-                    if (currentQuery) {
-                        searchUsers(currentQuery);
-                    }
-                    // 페이지 새로고침하여 보낸 신청 영역도 업데이트
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    alert('오류: ' + result.error);
-                }
-            } catch (error) {
-                alert('네트워크 오류가 발생했습니다.');
-            }
-        }
-        
-        // 기존 신청에 응답하기
-        async function respondToExistingRequest(requestId, action) {
-            const actionText = action === 'accept' ? '수락' : '거절';
-            
-            if (!confirm(`정말로 이 친구 신청을 ${actionText}하시겠습니까?`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/respond-friend-request/${requestId}/${action}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const result = await response.json();
-                
-                if (response.ok) {
-                    alert(result.message);
-                    location.reload();
-                } else {
-                    alert('오류: ' + result.error);
-                }
-            } catch (error) {
-                alert('네트워크 오류가 발생했습니다.');
-            }
-        }
-        
-        // 검색 초기화
-        function clearSearch() {
-            document.getElementById('friendUsername').value = '';
-            document.getElementById('searchResults').style.display = 'none';
-        }
-
         // 친구 신청 응답 (기존 받은 신청 영역용)
         async function respondToRequest(requestId, action) {
             const actionText = action === 'accept' ? '수락' : '거절';
@@ -448,9 +297,12 @@
         }
 
         // 친구 프로필 보기 (향후 구현)
-        function viewFriendProfile(friendId) {
-            alert(`친구 프로필 보기 기능은 곧 구현될 예정입니다! (Friend ID: ${friendId})`);
-            // 향후: window.location.href = `/friend/${friendId}/profile`;
+        function viewFriendProfile(username) {
+            if (username) {
+                window.location.href = `/user/${username}`;
+            } else {
+                alert('친구 프로필 보기 기능은 곧 구현될 예정입니다!');
+            }
         }
     </script>
 {% endblock content %}
