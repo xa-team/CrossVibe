@@ -13,62 +13,51 @@ from vibeapp.models.platform_token import PlatformToken
 from vibeapp.models.playlist import Playlist
 from vibeapp.models.friend import Friend
 from vibeapp.exceptions import UnsupportedPlatformError, TokenRefreshError
+from vibeapp.utils.auth_utils import get_current_user_safely, require_user_safely
 
 
 public_bp = Blueprint("public", __name__,)
 
 
-# 초기화면 라우터
 @public_bp.route("/")
 def home():
-    user_data = session.get("user")
+    """홈페이지 - 로그인 상태에 따라 다른 화면 표시"""
     user = None
     pending_requests_count = 0
     
-    if user_data and current_user.is_authenticated:
-        user = User.query.get(user_data["id"])
+    if current_user.is_authenticated:
+        user = get_current_user_safely()
         if user:
             pending_requests_count = user.get_pending_friend_requests_count()
-    elif current_user.is_authenticated:
-        user = current_user
-        pending_requests_count = user.get_pending_friend_requests_count()
     
     return render_template("public/home.html", user=user, pending_requests_count=pending_requests_count)
     
-    
-# 설정 페이지
+
+# ===== 사용자 설정 관련 =====
+
 @public_bp.route("/settings")
-@login_required
-def settings():
-    user_data = session.get("user")
-    if user_data:
-        current_user_obj = User.query.get(user_data["id"])
-    else:
-        current_user_obj = current_user
-    return render_template("user/settings.html", user=current_user_obj)
+@require_user_safely()
+def settings(user):
+    """사용자 설정 페이지"""
+    return render_template("user/settings.html", user=user)
 
 
-# 사용자명 설정 페이지
 @public_bp.route("/set-username")
-@login_required
-def set_username_page():
-    user_data = session.get("user")
-    if user_data:
-        current_user_obj = User.query.get(user_data["id"])
-    else:
-        current_user_obj = current_user
-    
-    # 이미 사용자명이 있으면 설정 페이지로 리다이렉트
-    if current_user_obj.username:
+@require_user_safely()
+def set_username_page(user):
+    """사용자명 설정 페이지"""
+    #이미 사용자명이 있으면 설정 페이지로 리다이렉트
+    if user.username:
         return redirect(url_for("public.settings"))
     
-    return render_template("user/set_username.html", user=current_user_obj)
+    return render_template("user/set_username.html", user=user)
 
 
-# 사용자명 설정/변경 처리
+
 @public_bp.route("/update-username", methods=["POST"])
-@login_required
-def update_username():
+@require_user_safely()
+def update_username(user):
+    """사용자명 설정/변경 처리"""
     try:
         data = request.get_json()
         new_username = data.get("username", "").strip()
@@ -81,23 +70,17 @@ def update_username():
         if not re.match(r'^[a-zA-Z0-9_]{3,20}$', new_username):
             return jsonify({"error": "사용자명은 영문, 숫자, 언더스코어만 사용하여 3-20자로 입력해주세요."}), 400
         
-        user_data = session.get("user")
-        if user_data:
-            current_user_obj = User.query.get(user_data["id"])
-        else:
-            current_user_obj = current_user
-        
         # 중복 확인 (자신 제외)
         existing_user = User.query.filter(
             User.username == new_username,
-            User.id != current_user_obj.id
+            User.id != user.id
         ).first()
         
         if existing_user:
             return jsonify({"error": "이미 사용중인 사용자명입니다."}), 400
         
         # 사용자명 업데이트
-        current_user_obj.username = new_username
+        user.username = new_username
         db.session.commit()
         
         return jsonify({"success": True, "message": "사용자명이 설정되었습니다!"}), 200
@@ -107,9 +90,11 @@ def update_username():
         return jsonify({"error": "사용자명 설정 중 오류가 발생했습니다."}), 500
     
 
-# 로그인 라우터
+
+# ===== 인증 관련
 @public_bp.route("/login/<platform>")
 def login_platform(platform):
+    """플랫폼별 OAuth 로그인 시작"""
     platform_config = Config.PLATFORM_OAUTH.get(platform)
     if not platform_config:
         raise UnsupportedPlatformError(f"{platform}은(는) 아직 지원하지 않는 플랫폼입니다.", 400)
@@ -126,16 +111,17 @@ def login_platform(platform):
     #elif platform == "Youtube":
     
 
-# 로그아웃 라우터
 @public_bp.route("/logout")
 def logout():
+    """로그아웃 처리"""
     logout_user()
     session.pop("user", None)
     return redirect(url_for("public.home"))
 
-# 콜백 라우터
+
 @public_bp.route("/callback/<platform>")
 def callback_platform(platform):
+    """OAuth 콜백 처리"""
     # 1.플랫폼 설정 확인
     platform_config = Config.PLATFORM_OAUTH.get(platform)
     if not platform_config:
@@ -171,7 +157,6 @@ def callback_platform(platform):
     if user_info_res.status_code != 200:
         print("📡 user_info_res.status:", user_info_res.status_code)
         print("📡 user_info_res.text:", user_info_res.text) 
-        
         raise TokenRefreshError(f"사용자 정보 요청 실패", 400)
 
     user_info = user_info_res.json()
@@ -238,14 +223,11 @@ def callback_platform(platform):
     return redirect(url_for("public.home"))
 
 
-# 테스트용 관리자 권한 설정
+# ===== 개발/테스트용 =====
 @public_bp.route("/make-admin")
 @login_required
-def make_admin():
-    user = User.query.get(current_user.id)
-    if not user:
-        return "DB에서 사용자를 찾을 수 없습니다.", 404
-
+def make_admin(user):
+    """테스트용 관리자 권한 설정"""
     user.is_admin = True
     db.session.commit()
     return f"{user.display_name or '사용자'}님은 이제 관리자입니다."
