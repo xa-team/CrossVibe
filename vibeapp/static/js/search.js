@@ -26,8 +26,8 @@ document.addEventListener("DOMContentLoaded", function () {
   initializeSearch();
 });
 
+// 페이지별 검색 설정 감지
 function initializeSearch() {
-  // 페이지별 검색 설정 감지
   const currentPage = detectCurrentPage();
 
   if (currentPage === "social") {
@@ -40,8 +40,8 @@ function initializeSearch() {
   setupGlobalEvents();
 }
 
+// URL 또는 페이지 요소로 현재 페이지 감지
 function detectCurrentPage() {
-  // URL 또는 페이지 요소로 현재 페이지 감지
   if (window.location.pathname.includes("/social")) {
     return "social";
   }
@@ -191,8 +191,21 @@ function displaySearchResults(users, dropdownElement, config) {
   }
 }
 
+function getRelationshipStatus(user) {
+  if (user.is_friend) {
+    return "friend";
+  } else if (user.has_pending_request_from_me) {
+    return "sent_request";
+  } else if (user.has_pending_request_to_me) {
+    return "received_request";
+  } else {
+    return "none";
+  }
+}
+
 function createUserItem(user, config) {
-  const statusInfo = getStatusInfo(user.relationship_status);
+  const relationshipStatus = getRelationshipStatus(user);
+  const statusInfo = getStatusInfo(relationshipStatus);
   const avatar = user.display_name
     ? user.display_name.charAt(0).toUpperCase()
     : user.username.charAt(0).toUpperCase();

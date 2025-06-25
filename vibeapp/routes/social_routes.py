@@ -248,9 +248,6 @@ def search_users():
     """사용자 검색 API(부분 일치)"""
     query = request.args.get("q", "").strip()
     
-    if not query or len(query) < 2:
-        return jsonify({"users": []}), 200
-
     
     user_data = session.get("user")
     if user_data:

@@ -34,7 +34,6 @@ class UserService:
             "username": user.username,
             "display_name": user.display_name,
             "platform_connections": [conn.platform for conn in user.platform_connections],
-            "is_self": user.id == current_user_id,
             "is_friend": is_friend,
             "has_pending_request_from_me": has_pending_from_me,
             "has_pending_request_to_me": has_pending_to_me,

@@ -256,7 +256,8 @@ const FriendRenderer = {
 
   // 검색 결과 사용자 아이템 생성 (소셜 페이지용)
   createSearchUserItem(user) {
-    const statusInfo = Utils.getRelationshipInfo(user.relationship_status);
+    const relationshipStatus = this.getRelationshipStatus(user);
+    const statusInfo = Utils.getRelationshipInfo(relationshipStatus);
     const avatar = Utils.generateAvatar(user.display_name || user.username);
     const platforms =
       user.platform_connections
@@ -282,6 +283,19 @@ const FriendRenderer = {
                 </div>
             </div>
         `;
+  },
+
+  //relationship status 계산
+  getRelationshipStuats(user) {
+    if (user.is_friend) {
+      return "friend";
+    } else if (user.has_pending_request_from_me) {
+      return "sent_request";
+    } else if (user.has_pending_request_to_me) {
+      return "received_request";
+    } else {
+      return "none";
+    }
   },
 
   // 액션 버튼 생성
