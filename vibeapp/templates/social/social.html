@@ -137,10 +137,20 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="bg-light p-3 rounded">
-                                                <strong>내 사용자명:</strong>
-                                                <code>{{ user.username }}</code>
-                                                <br>
-                                                <small class="text-muted">친구들에게 알려주세요!</small>
+                                                {% if user.username %}
+                                                    <strong>내 사용자명:</strong>
+                                                    <code>{{ user.username }}</code>
+                                                    <br>
+                                                    <small class="text-muted">친구들에게 알려주세요!</small>
+                                                {% else %}
+                                                    <strong>내 사용자명:</strong>
+                                                    <span class="text-warning">설정이 필요합니다</span>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <a href="{{ url_for('public.set_username_page') }}"
+                                                           class="text-primary">사용자명을 설정해주세요</a>
+                                                    </small>
+                                                {% endif %}
                                             </div>
                                         </div>
                                     </div>

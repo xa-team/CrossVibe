@@ -210,15 +210,6 @@ function createUserItem(user, config) {
     ? user.display_name.charAt(0).toUpperCase()
     : user.username.charAt(0).toUpperCase();
 
-  console.log(
-    "사용자:",
-    user.username,
-    "상태:",
-    user.relationship_status,
-    "showButton:",
-    statusInfo.showButton
-  ); // 디버깅용
-
   // 소셜 페이지의 경우 다른 레이아웃 사용
   if (config.customResultContainer) {
     return createSocialUserItem(user, statusInfo, avatar);
@@ -310,8 +301,6 @@ function getActionButton(user, statusInfo) {
 }
 
 function getStatusInfo(status) {
-  console.log("관계 상태: ", status);
-
   switch (status) {
     case "friend":
       return { class: "bg-success", text: "👫 친구", showButton: false };

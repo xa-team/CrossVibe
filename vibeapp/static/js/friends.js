@@ -300,7 +300,6 @@ const FriendRenderer = {
 
   // 액션 버튼 생성
   getActionButton(user, statusInfo) {
-    console.log(statusInfo.showButton);
     if (statusInfo.showButton) {
       return `<button class="btn btn-success btn-sm" 
                             onclick="FriendManager.sendRequest('${user.username}').then(success => success && setTimeout(() => location.reload(), 1000))">
