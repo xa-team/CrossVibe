@@ -48,7 +48,7 @@ def get_current_user_safely():
         # 세션의 사용자가 DB에 없으면 세션 정리
         if not current_user_obj:
             session.pop("user", None)
-            logout_user()  # Flask-Login 세션도 정리
+            logout_user()
             return None
     
     # 2. 세션에 없으면 current_user 사용

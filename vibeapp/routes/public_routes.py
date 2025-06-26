@@ -91,7 +91,7 @@ def update_username(user):
     
 
 
-# ===== 인증 관련
+# ===== 인증 관련 =====
 @public_bp.route("/login/<platform>")
 def login_platform(platform):
     """플랫폼별 OAuth 로그인 시작"""
