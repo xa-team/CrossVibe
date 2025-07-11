@@ -1,32 +1,56 @@
-// 전역 변수
+// ===== 검색 기능 전담 모듈 =====
+// 사용자 검색 및 검색 결과 UI를 관리
+
+/** @type {number||null} 검색 디바운싱용 타이머 ID */
 let searchTimeout;
+
+/** @type {AbortController||null} 현재 검색 요청 컨트롤러*/
 let currentSearchController;
 
-// 검색 설정 객체
+/**
+ * 검색 설정 객체
+ * @namespace SearchConfig
+ */
 const SearchConfig = {
-  // 네비게이션 바 검색 (기본)
+  /**
+   * 내비게이션 바 검색 설정
+   * @type {Object}
+   */
   navbar: {
     inputs: ["userSearchInput", "userSearchInputMobile"],
     dropdowns: ["searchDropdown", "searchDropdownMobile"],
     onSelect: viewUserProfile,
     showActions: true,
   },
-  // 소셜 페이지 검색
+
+  /**
+   * 소셜 페이지 검색 설정
+   * @type {Object}
+   */
   social: {
     inputs: ["friendUsername"],
     dropdowns: ["searchResults"],
-    onSelect: null, // 커스텀 핸들러 사용
+    onSelect: null, // 커스텀 핸들러(SocialPage.displaySocialSearchResults) 사용
     showActions: true,
     customResultContainer: "searchResultsList",
   },
 };
 
-// 로그인한 사용자만 검색 기능 초기화
+// ===== 초기화 =====
+
+/**
+ * DOM 로드 완료 시 검색 기능 초기화
+ * @event DOMContentLoaded
+ */
 document.addEventListener("DOMContentLoaded", function () {
   initializeSearch();
 });
 
-// 페이지별 검색 설정 감지
+/**
+ * 페이지별 검색 설정 감지 및 초기화
+ * @returns {void}
+ * @description 현재 페이지에 맞는 검색 설정을 적용
+ */
 function initializeSearch() {
   const currentPage = detectCurrentPage();
 
@@ -40,7 +64,13 @@ function initializeSearch() {
   setupGlobalEvents();
 }
 
-// URL 또는 페이지 요소로 현재 페이지 감지
+/**
+ *
+ * @returns {string} 페이지 타입 ('social' | 'default')
+ * @example
+ * const pageType = detectCurrentPage();
+ * console.log(pageType); // 'social' 또는 'default'
+ */
 function detectCurrentPage() {
   if (window.location.pathname.includes("/social")) {
     return "social";
@@ -48,6 +78,11 @@ function detectCurrentPage() {
   return "default";
 }
 
+/**
+ * 내비게이션 바 검색 초기화
+ * @returns {void}
+ * @description 데스크탑과 모바일 내비게이션 바 검색 설정
+ */
 function initializeNavbarSearch() {
   const config = SearchConfig.navbar;
   config.inputs.forEach((inputId, index) => {
@@ -60,6 +95,9 @@ function initializeNavbarSearch() {
   });
 }
 
+/**
+ * 소셜 페이지 검색 초기화
+ */
 function initializeSocialSearch() {
   const config = SearchConfig.social;
   const input = document.getElementById(config.inputs[0]);
@@ -70,29 +108,31 @@ function initializeSocialSearch() {
   }
 }
 
+/**
+ * 검색 입력 필드와 드롭다운에 이벤트 리스너 설정
+ * @param {HTMLElement} searchInput - 검색 입력 필드 요소
+ * @param {HTMLElement} searchDropdown - 검색 결과 드롭다운 요소
+ * @param {Object} config - 검색 설정 객체
+ */
 function setupSearch(searchInput, searchDropdown, config) {
   searchInput.addEventListener("input", function (e) {
     const query = e.target.value.trim();
 
-    // 이전 요청 취소
     if (currentSearchController) {
       currentSearchController.abort();
     }
 
-    // 검색어가 2글자 미만이면 드롭다운 숨기기
     if (query.length < 2) {
       hideDropdown(searchDropdown, config);
       return;
     }
 
-    // 디바운싱
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       searchUsers(query, searchDropdown, config);
     }, 300);
   });
 
-  // 외부 클릭 시 드롭다운 숨기기
   document.addEventListener("click", function (e) {
     if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
       hideDropdown(searchDropdown, config);
@@ -110,6 +150,8 @@ function setupSearch(searchInput, searchDropdown, config) {
     }
   });
 }
+
+// ===== 검색 결과 렌더링 =====
 
 function hideDropdown(dropdown, config) {
   if (config.customResultContainer) {
@@ -136,22 +178,36 @@ async function searchUsers(query, dropdownElement, config) {
     // AbortController로 요청 취소 가능하게 설정
     currentSearchController = new AbortController();
 
-    const response = await fetch(
-      `/api/search-users?q=${encodeURIComponent(query)}`,
-      {
-        signal: currentSearchController.signal,
+    const response = await CrossVibeAPI.searchUsers(query, {
+      signal: currentSearchController.signal,
+    });
+
+    if (result.success) {
+      displaySearchResults(result.data.users, dropdownElement, config);
+    } else {
+      NotificationManager.error(
+        CrossVibeUtils.handleError(
+          result.data?.error || "알 수 없는 오류",
+          "사용자 검색"
+        )
+      );
+      const errorMessage =
+        '<div class="search-user-item text-center text-muted">검색 중 오류가 발생했습니다.</div>';
+
+      if (config.customResultContainer) {
+        document.getElementById(config.customResultContainer).innerHTML =
+          errorMessage;
+        showDropdown(dropdownElement, config);
+      } else {
+        dropdownElement.innerHTML = errorMessage;
+        showDropdown(dropdownElement, config);
       }
-    );
-
-    if (!response.ok) {
-      throw new Error("검색 요청 실패");
     }
-
-    const data = await response.json();
-    displaySearchResults(data.users, dropdownElement, config);
   } catch (error) {
+    // AbortError는 사용자가 검색어를 변경하여 요청이 취소된 경우이므로 오류로 처리하지 않음
     if (error.name !== "AbortError") {
       console.error("검색 오류:", error);
+      NotificationManager.error(CrossVibeUtils.handleError(error, "검색 과정"));
       const errorMessage =
         '<div class="search-user-item text-center text-muted">검색 중 오류가 발생했습니다.</div>';
 
@@ -167,11 +223,18 @@ async function searchUsers(query, dropdownElement, config) {
   }
 }
 
+/**
+ * 검색 결과를 드롭 다운에 표시
+ * @param {Array<Object>} users 검색된 사용자 목록
+ * @param {HTMLElement} dropdownElement 검색 결과를 표시할 드롭다운 요소
+ * @param {Object} config 현재 검색 설정
+ * @returns
+ */
 function displaySearchResults(users, dropdownElement, config) {
   const resultHTML =
     users.length === 0
       ? '<div class="search-user-item text-center text-muted">검색 결과가 없습니다.</div>'
-      : users.map((user) => createUserItem(user, config)).join("");
+      : users.map((user) => renderUserItem(user, config)).join("");
 
   if (config.customResultContainer) {
     // 소셜 페이지의 경우 - 커스텀 컨테이너에 결과 표시
@@ -180,8 +243,11 @@ function displaySearchResults(users, dropdownElement, config) {
     showDropdown(dropdownElement, config);
 
     // 소셜 페이지의 displaySocialSearchResults 함수가 있으면 호출
-    if (typeof displaySocialSearchResults === "function") {
-      displaySocialSearchResults(users);
+    if (
+      typeof SocialPage !== "undefined" &&
+      typeof SocialPage.displaySocialSearchResults === "function"
+    ) {
+      SocialPage.displaySocialSearchResults(users);
       return;
     }
   } else {
@@ -191,31 +257,29 @@ function displaySearchResults(users, dropdownElement, config) {
   }
 }
 
-function getRelationshipStatus(user) {
-  if (user.is_friend) {
-    return "friend";
-  } else if (user.has_pending_request_from_me) {
-    return "sent_request";
-  } else if (user.has_pending_request_to_me) {
-    return "received_request";
-  } else {
-    return "none";
-  }
-}
-
-function createUserItem(user, config) {
-  const relationshipStatus = getRelationshipStatus(user);
-  const statusInfo = getStatusInfo(relationshipStatus);
-  const avatar = user.display_name
-    ? user.display_name.charAt(0).toUpperCase()
-    : user.username.charAt(0).toUpperCase();
-
-  // 소셜 페이지의 경우 다른 레이아웃 사용
-  if (config.customResultContainer) {
-    return createSocialUserItem(user, statusInfo, avatar);
+/**
+ * 단일 사용자 아이템을 HTML 문자열로 렌더링
+ * @param {Object} user 사용자 객체
+ * @param {Object} config 현재 검색 설정
+ * @returns {string} 사용자 아이템의 HTML 문자열
+ */
+function renderUserItem(user, config) {
+  //소셜 페이지의 경우 FriendRenderer를 사용하여 렌더링
+  if (config.customResultContainer && typeof FriendRenderer !== "undefined") {
+    return FriendRenderer.createSearchUserItem(user);
   }
 
-  // 네비게이션 바의 경우 기존 레이아웃
+  // 네비게이션 바의 경우 또는 FriendRenderer가 없는 경우
+  const relationshipStatus = CrossVibeUtils.getRelationshipStatus(user);
+  const statusInfo = CrossVibeUtils.getrelationshipInfo(relationshipStatus);
+  const avatar = CrossVibeUtils.generateAvatar(
+    user.display_name || user.username
+  );
+  // 플랫폼 아이콘을 이모지 타입으로 포맷팅
+  const platforms = CrossVibeUtils.formatPlatforms(user.platform_connections, {
+    type: "emoji",
+  });
+
   return `
         <div class="search-user-item" onclick="viewUserProfile('${
           user.username
@@ -228,15 +292,7 @@ function createUserItem(user, config) {
                     }</div>
                     <div class="text-muted small">@${user.username}</div>
                     <div class="text-muted small">
-                        ${user.platform_connections
-                          .map((platform) =>
-                            platform === "spotify"
-                              ? "🎵 Spotify"
-                              : platform === "youtube"
-                              ? "▶️ YouTube"
-                              : platform
-                          )
-                          .join(", ")}
+                        ${platforms || "연결된 플랫폼 없음"}
                     </div>
                 </div>
                 <div class="text-end">
@@ -244,7 +300,8 @@ function createUserItem(user, config) {
                       statusInfo.class
                     }">${statusInfo.text}</span>
                     ${
-                      statusInfo.showButton
+                      statusInfo.showButton &&
+                      statusInfo.buttonType !== "respond"
                         ? `<br><button class="btn btn-sm btn-primary mt-1" onclick="event.stopPropagation(); sendFriendRequest('${user.id}', this)">➕ 신청</button>`
                         : ""
                     }
@@ -254,82 +311,17 @@ function createUserItem(user, config) {
     `;
 }
 
-function createSocialUserItem(user, statusInfo, avatar) {
-  // 소셜 페이지에서는 FriendRenderer 사용
-  if (typeof FriendRenderer !== "undefined") {
-    return FriendRenderer.createSearchUserItem(user);
-  }
-
-  // 폴백: 기본 소셜 아이템 렌더링
-  return `
-        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-            <div class="d-flex align-items-center">
-                <div class="user-avatar user-avatar-sm me-3">${avatar}</div>
-                <div>
-                    <strong>${user.display_name || user.username}</strong>
-                    ${
-                      user.display_name
-                        ? `<br><small class="text-muted">@${user.username}</small>`
-                        : ""
-                    }
-                    <br><small class="text-muted">${
-                      user.platform_connections
-                        .map((p) =>
-                          p === "spotify"
-                            ? "🎵 Spotify"
-                            : p === "youtube"
-                            ? "▶️ YouTube"
-                            : p
-                        )
-                        .join(", ") || "연결된 플랫폼 없음"
-                    }</small>
-                </div>
-            </div>
-            <div>
-                ${getActionButton(user, statusInfo)}
-            </div>
-        </div>
-    `;
-}
-
-function getActionButton(user, statusInfo) {
-  if (statusInfo.showButton) {
-    return `<button class="btn btn-success btn-sm" onclick="sendFriendRequestToUser('${user.username}')">➕ 신청</button>`;
-  } else {
-    return `<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`;
-  }
-}
-
-function getStatusInfo(status) {
-  switch (status) {
-    case "friend":
-      return { class: "bg-success", text: "👫 친구", showButton: false };
-    case "sent_request":
-      return { class: "bg-warning", text: "⏳ 신청함", showButton: false };
-    case "received_request":
-      return { class: "bg-info", text: "📨 신청받음", showButton: false };
-    default:
-      return {
-        class: "bg-light text-dark",
-        text: "👋 연결 가능",
-        showButton: true,
-      };
-  }
-}
-
-async function sendFriendRequest(userId, buttonElement) {
-  const originalText = buttonElement.textContent;
-  buttonElement.disabled = true;
-  buttonElement.textContent = "⏳ 처리중...";
+/**
+ * 사용자 id를 통해 친구 신청을 보냄.
+ * @param {number} userId 친구 신청을 보낼 대상 사용자의 ID
+ * @param {HTMLElement} buttonElement 친구 신청 버튼 요소 (로딩 상태 표시용)
+ */
+async function sendFriendRequestById(userId, buttonElement) {
+  CrossVibeUtils.setLoading(buttonElement, true, "신청 중...");
 
   try {
-    const response = await fetch("/send-friend-request-by-id", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: userId }),
-    });
-
-    const result = await response.json();
+    // FriendManager 모듈을 통해 친구 신청 로직 위임
+    const success = await FriendManager.sendRequestByID(userId, buttonElement);
 
     if (response.ok) {
       buttonElement.textContent = "✅ 완료";

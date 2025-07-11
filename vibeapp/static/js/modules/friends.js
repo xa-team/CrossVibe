@@ -1,6 +1,12 @@
 // ===== 친구 관리 시스템 =====
 
 /**
+ * 친구 신청 응답
+ * @param {number}
+ */
+async function repspondToFriendRequest(requestId, action) {}
+
+/**
  * 친구 관리 비즈니스 로직 클래스
  * API 호출은 CrossVibeAPI에 위임, UI 관련 로직에만 집중
  */
@@ -73,7 +79,7 @@ class FriendManager {
    * @param {string} action - 'accept' 또는 'reject'
    * @returns {Promise<boolean>} 성공 여부
    */
-  async respondToRequest(requestId, action) {
+  static async respondToRequest(requestId, action) {
     const actionText = action === "accept" ? "수락" : "거절";
 
     return new Promise((resolve) => {
