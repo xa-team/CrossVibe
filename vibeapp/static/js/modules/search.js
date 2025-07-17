@@ -323,60 +323,57 @@ async function sendFriendRequestById(userId, buttonElement) {
     // FriendManager 모듈을 통해 친구 신청 로직 위임
     const success = await FriendManager.sendRequestByID(userId, buttonElement);
 
-    if (response.ok) {
-      buttonElement.textContent = "✅ 완료";
-      buttonElement.classList.remove("btn-primary");
-      buttonElement.classList.add("btn-success");
-
+    if (success) {
       // 3초 후 검색 결과 새로고침
       setTimeout(() => {
         refreshCurrentSearch();
+        CrossVibeUtils.setLoading(buttonElement, false, "➕ 신청");
+        buttonElement.classList.remove("btn-success");
+        buttonElement.classList.add("btn-primary");
       }, 3000);
     } else {
-      alert("오류: " + result.error);
-      buttonElement.disabled = false;
-      buttonElement.textContent = originalText;
+      CrossVibeUtils.setLoading(buttonElement, false, "➕ 신청");
     }
   } catch (error) {
-    alert("네트워크 오류가 발생했습니다.");
-    buttonElement.disabled = false;
-    buttonElement.textContent = originalText;
+    NotificationManager.error(
+      CrossVibeUtils.handleError(error, "친구 신청")
+    );
+    CrossVibeUtils.setLoading(buttonElement, false, "➕ 신청");
   }
 }
 
-// 소셜 페이지용 친구 신청 함수 (friends.js와 연동)
+/**
+ * 사용자명을 기반으로 친구 신청을 보냄.
+ * @param {string} username 친구 신청을 보낼 대상 사용자의 사용자명
+ */
 async function sendFriendRequestToUser(username) {
   if (typeof FriendManager !== "undefined") {
-    // friends.js가 로드된 경우 FriendManager 사용
     const success = await FriendManager.sendRequest(username);
     if (success) {
       refreshCurrentSearch();
       setTimeout(() => location.reload(), 1000);
     }
   } else {
-    // 폴백: 직접 API 호출
     try {
-      const response = await fetch("/send-friend-request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username }),
-      });
+      const result = await CrossVibeAPI.sendFriendRequest(username);
 
-      const result = await response.json();
-
-      if (response.ok) {
-        alert("친구 신청을 보냈습니다!");
+      if (result.success) {
+        NotificationManager.success("친구 신청을 보냈습니다!");
         refreshCurrentSearch();
         setTimeout(() => location.reload(), 1000);
       } else {
-        alert("오류: " + result.error);
+        NotificationManager.error("오류: " + result.data.error);
       }
     } catch (error) {
-      alert("네트워크 오류가 발생했습니다.");
+      NotificationManager.error(CrossVibeUtils.handleError(error, "친구 신청"));
     }
   }
 }
 
+
+/**
+ * 현재 활성화된 검색 입력 필드의 내용을 기반으로 검색 결과를 새로고침
+ */
 function refreshCurrentSearch() {
   // 현재 활성화된 검색 입력 필드 찾기
   const activeInputs = [
@@ -414,6 +411,10 @@ function refreshCurrentSearch() {
   }
 }
 
+/**
+ * 사용자 프로필 페이지로 이동
+ * @param {string} username 이동할 사용자의 사용자명
+ */
 function viewUserProfile(username) {
   // 모든 드롭다운 숨기기
   document.querySelectorAll(".search-dropdown").forEach((dropdown) => {
@@ -448,7 +449,10 @@ function setupGlobalEvents() {
   });
 }
 
-// 소셜 페이지에서 사용할 수 있는 검색 초기화 함수 (전역 노출)
+
+/**
+ * 소셜 페이지에서 검색 입력 필드를 지우고 결과를 숨김. (전역 노출)
+ */
 window.clearSearch = function () {
   const input = document.getElementById("friendUsername");
   const dropdown = document.getElementById("searchResults");
@@ -457,6 +461,8 @@ window.clearSearch = function () {
   if (dropdown) dropdown.style.display = "none";
 };
 
+
 // 전역 함수로 노출 (템플릿에서 호출용)
 window.sendFriendRequestToUser = sendFriendRequestToUser;
+window.sendFriendRequestById = sendFriendRequestById;
 window.viewUserProfile = viewUserProfile;
