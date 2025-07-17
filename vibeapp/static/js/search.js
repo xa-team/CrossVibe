@@ -251,7 +251,7 @@ function renderUserItem(user, config) {
 
   // 네비게이션 바의 경우 또는 FriendRenderer가 없는 경우
   const relationshipStatus = CrossVibeUtils.getRelationshipStatus(user);
-  const statusInfo = CrossVibeUtils.getrelationshipInfo(relationshipStatus);
+  const statusInfo = CrossVibeUtils.getRelationshipInfo(relationshipStatus);
   const avatar = CrossVibeUtils.generateAvatar(
     user.display_name || user.username
   );
@@ -276,7 +276,7 @@ function renderUserItem(user, config) {
                         ${platforms || "연결된 플랫폼 없음"}
                     </div>
                 </div>
-                <div class="text-end">
+                <div class="text-end ms-auto">
                     <span class="badge relationship-badge ${
                       statusInfo.class
                     }">${statusInfo.text}</span>
