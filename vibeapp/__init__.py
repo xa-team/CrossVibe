@@ -23,7 +23,7 @@ def create_app():
     migrate.init_app(app, db)
     
     login_manager.init_app(app)
-    login_manager.login_view = "public.login"
+    login_manager.login_view = "public.home"
 
     # Blueprint 등록
     register_routes(app)
