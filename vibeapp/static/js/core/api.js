@@ -79,9 +79,10 @@ class CrossVibeAPI {
   /**
    * 사용자 검색
    * @param {string} query - 검색어
+   * @param {Object} [options = {}] fetch 옵션
    * @returns {Promise<Array>} 검색된 사용자 목록
    */
-  static async searchUsers(query) {
+  static async searchUsers(query, options = {}) {
     if (!query || query.trim().length < 2) {
       return [];
     }

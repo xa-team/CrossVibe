@@ -110,13 +110,12 @@
             <script src="{{ url_for('static', filename='js/core/api.js') }}"></script>
             <script src="{{ url_for('static', filename='js/core/utils.js' )}}"></script>
             <script src="{{ url_for('static', filename='js/modules/notifications.js')}}"></script>
+            <script src="{{ url_for('static', filename='js/modules/friends.js')}}"></script>
             <script src="{{ url_for('static', filename='js/search.js') }}"></script>
             <!-- 페이지별 JavaScript -->
             {% if request.endpoint == 'social.main' %}
-                <script src="{{ url_for('static', filename='js/friends.js') }}"></script>
                 <script src="{{ url_for('static', filename='js/social.js') }}"></script>
             {% elif request.endpoint == 'social.user_profile' %}
-                <script src="{{ url_for('static', filename='js/friends.js') }}"></script>
                 <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
             {% endif %}
         {% endif %}

@@ -178,31 +178,11 @@ async function searchUsers(query, dropdownElement, config) {
     // AbortController로 요청 취소 가능하게 설정
     currentSearchController = new AbortController();
 
-    const response = await CrossVibeAPI.searchUsers(query, {
+    const users = await CrossVibeAPI.searchUsers(query, {
       signal: currentSearchController.signal,
     });
 
-    if (result.success) {
-      displaySearchResults(result.data.users, dropdownElement, config);
-    } else {
-      NotificationManager.error(
-        CrossVibeUtils.handleError(
-          result.data?.error || "알 수 없는 오류",
-          "사용자 검색"
-        )
-      );
-      const errorMessage =
-        '<div class="search-user-item text-center text-muted">검색 중 오류가 발생했습니다.</div>';
-
-      if (config.customResultContainer) {
-        document.getElementById(config.customResultContainer).innerHTML =
-          errorMessage;
-        showDropdown(dropdownElement, config);
-      } else {
-        dropdownElement.innerHTML = errorMessage;
-        showDropdown(dropdownElement, config);
-      }
-    }
+    displaySearchResults(users, dropdownElement, config);
   } catch (error) {
     // AbortError는 사용자가 검색어를 변경하여 요청이 취소된 경우이므로 오류로 처리하지 않음
     if (error.name !== "AbortError") {
@@ -277,7 +257,8 @@ function renderUserItem(user, config) {
   );
   // 플랫폼 아이콘을 이모지 타입으로 포맷팅
   const platforms = CrossVibeUtils.formatPlatforms(user.platform_connections, {
-    type: "emoji",
+    type: "svgImages",
+    size: 24,
   });
 
   return `
@@ -335,9 +316,7 @@ async function sendFriendRequestById(userId, buttonElement) {
       CrossVibeUtils.setLoading(buttonElement, false, "➕ 신청");
     }
   } catch (error) {
-    NotificationManager.error(
-      CrossVibeUtils.handleError(error, "친구 신청")
-    );
+    NotificationManager.error(CrossVibeUtils.handleError(error, "친구 신청"));
     CrossVibeUtils.setLoading(buttonElement, false, "➕ 신청");
   }
 }
@@ -369,7 +348,6 @@ async function sendFriendRequestToUser(username) {
     }
   }
 }
-
 
 /**
  * 현재 활성화된 검색 입력 필드의 내용을 기반으로 검색 결과를 새로고침
@@ -449,7 +427,6 @@ function setupGlobalEvents() {
   });
 }
 
-
 /**
  * 소셜 페이지에서 검색 입력 필드를 지우고 결과를 숨김. (전역 노출)
  */
@@ -460,7 +437,6 @@ window.clearSearch = function () {
   if (input) input.value = "";
   if (dropdown) dropdown.style.display = "none";
 };
-
 
 // 전역 함수로 노출 (템플릿에서 호출용)
 window.sendFriendRequestToUser = sendFriendRequestToUser;
