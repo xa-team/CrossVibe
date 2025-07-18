@@ -49,53 +49,57 @@
             <div class="tab-content" id="socialTabsContent">
                 <!-- 내 친구 탭 -->
                 <div class="tab-pane fade show active" id="friends" role="tabpanel">
-                    {% if friends %}
-                        <div class="row">
-                            {% for friend in friends %}
-                                <div class="col-md-6 mb-3">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="card-title mb-1">{{ friend.display_name or friend.username }}</h6>
-                                                    <small class="text-muted">
-                                                        {% if friend.platform_connections %}
-                                                            {% for conn in friend.platform_connections %}
-                                                                {% if conn.platform == "spotify" %}🎵 Spotify{% endif %}
-                                                                {% if conn.platform == "youtube" %}▶️ YouTube{% endif %}
-                                                                {% if not loop.last %},{% endif %}
-                                                            {% endfor %}
-                                                        {% else %}
-                                                            연결된 플랫폼 없음
-                                                        {% endif %}
-                                                    </small>
-                                                </div>
-                                                <div>
-                                                    <button class="btn btn-primary btn-sm"
-                                                            onclick="viewFriendProfile('{{ friend.username }}')">
-                                                        👤 프로필
-                                                    </button>
+                    <div id="friendsContainer">
+                        {% if friends %}
+                            <div class="row">
+                                {% for friend in friends %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="card-title mb-1">{{ friend.display_name or friend.username }}</h6>
+                                                        <small class="text-muted">
+                                                            {% if friend.platform_connections %}
+                                                                {% for conn in friend.platform_connections %}
+                                                                    {% if conn.platform == "spotify" %}🎵 Spotify{% endif %}
+                                                                    {% if conn.platform == "youtube" %}▶️ YouTube{% endif %}
+                                                                    {% if not loop.last %},{% endif %}
+                                                                {% endfor %}
+                                                            {% else %}
+                                                                연결된 플랫폼 없음
+                                                            {% endif %}
+                                                        </small>
+                                                    </div>
+                                                    <div>
+                                                        <button class="btn btn-primary btn-sm"
+                                                                onclick="FriendManager.viewFriendProfile('{{ friend.username }}')">
+                                                            👤 프로필
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <!-- 친구 통계 -->
-                        <div class="mt-4 p-3 bg-light rounded">
-                            <h6>📊 친구 통계</h6>
-                            <p class="mb-0">총 {{ friends|length }}명의 친구와 연결되어 있습니다!</p>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <div class="display-1">👥</div>
-                            <h4>아직 친구가 없습니다</h4>
-                            <p class="text-muted">친구를 추가해서 음악 취향을 공유해보세요!</p>
-                            <button class="btn btn-primary"
-                                    onclick="document.getElementById('manage-friends-tab').click()">친구 추가하기</button>
-                        </div>
-                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <!-- 친구 통계 -->
+                            <div class="mt-4 p-3 bg-light rounded" id="friendsStats">
+                                <h6>📊 친구 통계</h6>
+                                <p class="mb-0">총 {{ friends|length }}명의 친구와 연결되어 있습니다!</p>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <div class="display-1">👥</div>
+                                <h4>아직 친구가 없습니다</h4>
+                                <p class="text-muted">친구를 추가해서 음악 취향을 공유해보세요!</p>
+                                <button class="btn btn-primary"
+                                        onclick="document.getElementById('manage-friends-tab').click()">
+                                    친구 추가하기
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
                 <!-- 친구 관리 탭 -->
                 <div class="tab-pane fade" id="manage-friends" role="tabpanel">
@@ -147,8 +151,7 @@
                                                     <span class="text-warning">설정이 필요합니다</span>
                                                     <br>
                                                     <small class="text-muted">
-                                                        <a href="{{ url_for('public.set_username_page') }}"
-                                                           class="text-primary">사용자명을 설정해주세요</a>
+                                                        <a href="{{ url_for('public.set_username_page') }}" class="text-primary">사용자명을 설정해주세요</a>
                                                     </small>
                                                 {% endif %}
                                             </div>
@@ -169,7 +172,7 @@
                                         <span class="badge bg-light text-dark">{{ pending_requests_count }}</span>
                                     {% endif %}
                                 </div>
-                                <div class="card-body scrollable-card-body">
+                                <div class="card-body scrollable-card-body" id="pendingRequestsContainer">
                                     {% if pending_requests %}
                                         {% for req in pending_requests %}
                                             <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
@@ -179,11 +182,11 @@
                                                 </div>
                                                 <div>
                                                     <button class="btn btn-success btn-sm me-1"
-                                                            onclick="respondToRequest({{ req.id }}, 'accept')">
+                                                            onclick="FriendManager.respondToRequest({{ req.id }}, 'accept')">
                                                         ✅
                                                     </button>
                                                     <button class="btn btn-danger btn-sm"
-                                                            onclick="respondToRequest({{ req.id }}, 'reject')">
+                                                            onclick="FriendManager.respondToRequest({{ req.id }}, 'reject')">
                                                         ❌
                                                     </button>
                                                 </div>
@@ -215,7 +218,10 @@
                                                 <div>
                                                     {% if req.status == "pending" %}
                                                         <span class="badge bg-warning me-1">⏳</span>
-                                                        <button class="btn btn-danger btn-sm" onclick="cancelRequest({{ req.id }})">취소</button>
+                                                        <button class="btn btn-danger btn-sm"
+                                                                onclick="FriendManager.cancelRequest({{ req.id }}).then(success => success && location.reload())">
+                                                            취소
+                                                        </button>
                                                     {% elif req.status == "accepted" %}
                                                         <span class="badge bg-success">✅</span>
                                                     {% elif req.status == "rejected" %}
@@ -251,68 +257,4 @@
             </div>
         {% endif %}
     </div>
-    <script>
-        // 기존 social.html의 함수들 (search.js와 통합되지 않은 부분)
-        
-        // 친구 신청 응답 (기존 받은 신청 영역용)
-        async function respondToRequest(requestId, action) {
-            const actionText = action === 'accept' ? '수락' : '거절';
-            
-            if (!confirm(`정말로 이 친구 신청을 ${actionText}하시겠습니까?`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/respond-friend-request/${requestId}/${action}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const result = await response.json();
-                
-                if (response.ok) {
-                    alert(result.message);
-                    location.reload();
-                } else {
-                    alert('오류: ' + result.error);
-                }
-            } catch (error) {
-                alert('네트워크 오류가 발생했습니다.');
-            }
-        }
-
-        // 친구 신청 취소
-        async function cancelRequest(requestId) {
-            if (!confirm('정말로 이 친구 신청을 취소하시겠습니까?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/cancel-friend-request/${requestId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const result = await response.json();
-                
-                if (response.ok) {
-                    alert(result.message);
-                    location.reload();
-                } else {
-                    alert('오류: ' + result.error);
-                }
-            } catch (error) {
-                alert('네트워크 오류가 발생했습니다.');
-            }
-        }
-
-        // 친구 프로필 보기 (향후 구현)
-        function viewFriendProfile(username) {
-            if (username) {
-                window.location.href = `/user/${username}`;
-            } else {
-                alert('친구 프로필 보기 기능은 곧 구현될 예정입니다!');
-            }
-        }
-    </script>
 {% endblock content %}

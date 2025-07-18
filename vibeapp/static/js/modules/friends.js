@@ -30,7 +30,7 @@ class FriendManager {
         return false;
       }
     } catch (error) {
-      NotificationManager.error(CrossVibeAPI.handleError(error, "친구 신청"));
+      NotificationManager.error(CrossVibeUtils.handleError(error, "친구 신청"));
       return false;
     }
   }
@@ -148,12 +148,12 @@ class FriendManager {
    * 친구 목록 가져오기
    * @returns {Promise<Array>} 친구 목록
    */
-  async getFriends() {
+  static async getFriends() {
     try {
-      return await API.getFriends();
+      return await CrossVibeAPI.getFriends();
     } catch (error) {
       NotificationManager.error(
-        CrossVibeUtils(handleError(error, "친구 목록 조회"))
+        CrossVibeUtils.handleError(error, "친구 목록 조회")
       );
       return [];
     }
@@ -163,12 +163,15 @@ class FriendManager {
    * 받은 친구 신청 가져오기
    * @returns {Promise<Array>} 받은 친구 신청 목록
    */
-  async getPendingRequests() {
+  static async getPendingRequests() {
     try {
       return await CrossVibeAPI.getPendingRequests();
     } catch (error) {
-      Utils.handleError(error, "친구 신청 조회");
-      return [];
+      console.error(error);
+      NotificationManager.error(
+        CrossVibeUtils.handleError(error, "친구 신청 조회")
+      );
+      throw error;
     }
   }
 
@@ -176,7 +179,7 @@ class FriendManager {
    * 프로필 보기
    * @param {string} username
    */
-  viewProfile(username) {
+  static viewProfile(username) {
     if (username) {
       window.location.href = `/user/${username}`;
     } else {
@@ -497,6 +500,8 @@ class FriendEventHandler {
       const friends = await FriendManager.getFriends();
       container.innerHTML = FriendRenderer.generateFriendsHTML(friends);
     } catch (error) {
+      const errorMessage = CrossVibeUtils.handleError(error, "친구 목록 로드");
+
       container.innerHTML = FriendRenderer.createEmptyState(
         "❌",
         "친구 목록을 불러올 수 없습니다",
@@ -516,10 +521,12 @@ class FriendEventHandler {
 
     try {
       const request = await FriendManager.getPendingRequests();
-      container.innerHTML = FriendRenderer.generateRequestsHTML(requests);
+      container.innerHTML = FriendRenderer.generateRequestsHTML(request);
 
-      this.updatePendingRequestsBadge(requests.length);
+      this.updatePendingRequestsBadge(request.length);
     } catch (error) {
+      console.error(error);
+
       container.innerHTML = FriendRenderer.createEmptyState(
         "❌",
         "신청 목록을 불러올 수 없습니다",

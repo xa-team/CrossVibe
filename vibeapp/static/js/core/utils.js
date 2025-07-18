@@ -387,20 +387,42 @@ class CrossVibeUtils {
    * @param {string} context - 에러 발생 컨텍스트
    * @returns {string} 사용자 친화적 에러 메시지
    */
-  static handleError(error, context = "") {
+  static handleError(error, context) {
     //개발 환경에서만 상세 로그 출력
-    if (
-      process?.env?.NODE_ENV === "development" ||
-      window.location.hostname === "localhost"
-    ) {
+    // if (
+    //   process?.env?.NODE_ENV === "development" ||
+    //   window.location.hostname === "localhost"
+    // ) {
+    //   console.error(`${context} 오류:`, error);
+    // }
+
+    const isDevelopment =
+      window.location.hostname === "localhost" ||
+      window.location.hostname.includes("127.0.0.1");
+    if (isDevelopment) {
       console.error(`${context} 오류:`, error);
     }
 
-    // 사용자 친화적 에러 메시지 반환
-    if (error.message) {
+    // 표준 Error 객체인 경우 (e.g., new Error("..."))
+    if (error instanceof Error && error.message) {
+      if (error.message.includes("Failed to fetch")) {
+        return "네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.";
+      }
       return error.message;
     }
+    // API 응답에서 넘어온 커스텀 오류 객체인 경우 (e.g., { error: "..." } 또는 { message: "..." })
+    if (typeof error === "object" && error !== null) {
+      if (error.error) {
+        // 'error' 필드가 있는 경우
+        return error.error;
+      }
+      if (error.message) {
+        // 'message' 필드가 있는 경우
+        return error.message;
+      }
+    }
 
+    // 그 외 예상치 못한 오류
     return "예상치 못한 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
   }
 
@@ -469,6 +491,5 @@ window.Utils = {
   getRelationshipInfo: CrossVibeUtils.getRelationshipInfo.bind(CrossVibeUtils),
   debounce: CrossVibeUtils.debounce.bind(CrossVibeUtils),
   throttle: CrossVibeUtils.throttle.bind(CrossVibeUtils),
-  handleError: CrossVibeUtils.handleError.bind(CrossVibeUtils),
   setLoading: CrossVibeUtils.setLoading.bind(CrossVibeUtils),
 };

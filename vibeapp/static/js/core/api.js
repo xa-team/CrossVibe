@@ -19,21 +19,71 @@ class CrossVibeAPI {
 
     const finalOptions = { ...defaultOptions, ...options };
 
+    console.log(`[CrossVibeAPI] 요청 시작: ${finalOptions.method} ${url}`);
+    console.log("[CrossVibeAPI] 요청 옵션:", finalOptions);
+
     try {
       const response = await fetch(url, finalOptions);
-      const result = await response.json();
 
-      return {
-        success: response.ok,
-        data: result,
-        status: response.status,
-      };
+      const responseText = await response.text();
+
+      if (response.ok) {
+        let result = {};
+        try {
+          result = JSON.parse(responseText);
+        } catch (error) {
+          console.warn(
+            `[CrossVibeAPI] 성공 응답이지만 JSON 파싱 실패 (${url}):`,
+            error
+          );
+          result = {
+            message:
+              responseText ||
+              "성공적으로 처리되었으나 응답 내용이 비어있거나 JSON 형식이 아닙니다.",
+          };
+        }
+        return {
+          success: true,
+          data: result,
+          status: response.status,
+        };
+      } else {
+        // 응답이 성공적이지 않은 경우 (4xx, 5xx 등)
+        let errorData = {};
+        let errorMessage = `서버 응답 오류: ${response.status}`;
+
+        try {
+          errorData = JSON.parse(responseText);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (error) {
+          errorMessage = responseText || errorMessage;
+        }
+
+        console.error(
+          `[CrossVibeAPI] 요청 실패 (${url}): 상태 코드 ${response.status}`,
+          `메시지: ${errorMessage}`,
+          `원본 오류 데이터:`,
+          errorData
+        );
+
+        return {
+          success: false,
+          data: errorData,
+          status: response.status,
+          error: errorMessage,
+        };
+      }
     } catch (error) {
-      console.error("API 요청 오류:", error);
+      console.error(
+        `[CrossVibeAPI] 네트워크 또는 파싱 오류 (${url}):`,
+        error.name, // Error 타입 (e.g., TypeError, AbortError)
+        error.message, // Error 메시지
+        error // 전체 Error 객체
+      );
 
       return {
         success: false,
-        error: error.message,
+        error: `네트워크 오류: ${error.message || "알 수 없는 연결 오류"}`,
         status: null,
       };
     }
@@ -174,7 +224,7 @@ class CrossVibeAPI {
       throw new Error("action은 'accept' 또는 'reject'여야 합니다.");
     }
 
-    return await this.post(`/repond-friend-request/${requestId}/${action}`);
+    return await this.post(`/respond-friend-request/${requestId}/${action}`);
   }
 
   /**
@@ -248,7 +298,6 @@ window.API = {
   put: CrossVibeAPI.put.bind(CrossVibeAPI),
   delete: CrossVibeAPI.delete.bind(CrossVibeAPI),
   searchUsers: CrossVibeAPI.searchUsers.bind(CrossVibeAPI),
-  getFriends: CrossVibeAPI.getFriends.bind(CrossVibeAPI),
   getPendingRequests: CrossVibeAPI.getPendingRequests.bind(CrossVibeAPI),
   sendFriendRequest: CrossVibeAPI.sendFriendRequest.bind(CrossVibeAPI),
   sendFriendRequestById: CrossVibeAPI.sendFriendRequestById.bind(CrossVibeAPI),
