@@ -114,9 +114,9 @@
             <script src="{{ url_for('static', filename='js/modules/search.js') }}"></script>
             <!-- 페이지별 JavaScript -->
             {% if request.endpoint == 'social.main' %}
-                <script src="{{ url_for('static', filename='js/social.js') }}"></script>
+                <script src="{{ url_for('static', filename='js/pages/social.js') }}"></script>
             {% elif request.endpoint == 'social.user_profile' %}
-                <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+                <script src="{{ url_for('static', filename='js/pages/profile.js') }}"></script>
             {% endif %}
         {% endif %}
     </body>
