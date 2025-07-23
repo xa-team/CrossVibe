@@ -5,8 +5,6 @@ class UserService:
     @staticmethod
     def search_users(query, current_user_id, limit=10):
         """사용자 검색 (부분 일치)"""
-        if not query or len(query) < 2:
-            return []
         
         # 사용자명으로 검색 (부분 일치, 자신 제외)
         users = User.query.filter(

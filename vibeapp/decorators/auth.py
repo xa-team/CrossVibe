@@ -9,11 +9,11 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         user_session = session.get("user")
         if not user_session:
-            return redirect(url_for("public.login"))
+            return redirect(url_for("public.home"))
         
         user_id = user_session.get("id")
         if not user_id:
-            return redirect(url_for("public.login"))
+            return redirect(url_for("public.home"))
         
         user = User.query.get(user_id)
         if not user or not user.is_admin:
@@ -29,7 +29,7 @@ def login_required(f):
         user_session = session.get("user")
         if not user_session or "id" not in user_session:
             flash("로그인이 필요한 서비스입니다.", "warning")
-            return redirect(url_for("public.login"))
+            return redirect(url_for("public.home"))
         
         #플랫폼 연결 여부 검사
         active = user_session.get("active_platform")
