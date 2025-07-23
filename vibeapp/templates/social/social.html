@@ -219,7 +219,6 @@
                                                     {% if req.status == "pending" %}
                                                         <span class="badge bg-warning me-1">⏳</span>
                                                         <button class="btn btn-danger btn-sm"
-                                                                onclick="FriendManager.cancelRequest({{ req.id }}).then(success => success && location.reload())">
                                                             취소
                                                         </button>
                                                     {% elif req.status == "accepted" %}

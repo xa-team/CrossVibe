@@ -9,7 +9,7 @@ const UserProfile = {
   async sendFriendRequest(username) {
     const success = await FriendManager.sendRequest(username);
     if (success) {
-      setTimeout(() => location.reload(), 1000);
+      setTimeout(() => location.reload(), 500);
     }
   },
 
@@ -21,7 +21,7 @@ const UserProfile = {
   async respondToRequest(requestId, action) {
     const success = await FriendManager.sendRequest(username);
     if (success) {
-      setTimeout(() => location.reload(), 1000);
+      setTimeout(() => location.reload(), 500);
     }
   },
 
@@ -30,9 +30,9 @@ const UserProfile = {
    * @param {number} requestId - 취소할 친구 신청 ID
    */
   async cancelFriendRequest(requestId) {
-    const success = await FriendManager.respondToRequest(requestId, acttion);
+    const success = await FriendManager.cancelRequest(requestId);
     if (success) {
-      setTimeout(() => location.reload(), 1000);
+      setTimeout(() => location.reload(), 500);
     }
   },
 

@@ -590,11 +590,5 @@ window.respondToRequest = (requestId, action) => {
   });
 };
 
-window.cancelRequest = (requestId) => {
-  FriendManager.cancelRequest(requestId).then((success) => {
-    if (success) setTimeout(() => location.reload(), 1000);
-  });
-};
-
 window.viewFriendProfile = FriendManager.viewProfile;
 window.sendFriendRequestToUser = FriendManager.sendRequest;

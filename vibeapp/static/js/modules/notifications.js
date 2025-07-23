@@ -374,7 +374,7 @@ class NotificationManager {
       warning: "경고",
       info: "알림",
     };
-    return titles[type] || titles.info;
+    return titles[Type] || titles.info;
   }
 
   // ===== 설정 관리 =====

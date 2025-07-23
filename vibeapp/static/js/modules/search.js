@@ -44,12 +44,11 @@ class SearchManager {
    */
 
   static init() {
-    const currentPage = this.detectCurrentPage();
+    this.initializeNavbarSearch();
 
+    const currentPage = this.detectCurrentPage();
     if (currentPage === "social") {
       this.initializeSocialSearch();
-    } else {
-      this.initializeNavbarSearch();
     }
 
     // 전역 이벤트 리스너
@@ -302,7 +301,7 @@ class SearchManager {
                     ${
                       statusInfo.showButton &&
                       statusInfo.buttonType !== "respond"
-                        ? `<br><button class="btn btn-sm btn-primary mt-1" onclick="event.stopPropagation(); sendFriendRequest('${user.id}', this)">➕ 신청</button>`
+                        ? `<br><button class="btn btn-sm btn-primary mt-1" onclick="event.stopPropagation(); sendFriendRequestById('${user.id}', this)">➕ 신청</button>`
                         : ""
                     }
                 </div>
@@ -321,7 +320,7 @@ class SearchManager {
 
     try {
       // FriendManager 모듈을 통해 친구 신청 로직 위임
-      const success = await FriendManager.sendRequestByID(
+      const success = await FriendManager.sendRequestById(
         userId,
         buttonElement
       );
