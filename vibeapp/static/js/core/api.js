@@ -290,17 +290,3 @@ class CrossVibeAPI {
 
 // ===== 전역 노출 =====
 window.CrossVibeAPI = CrossVibeAPI;
-
-// 하위 호환성을 위한 기존 API 별칭 (추후 제거 예정)
-window.API = {
-  request: CrossVibeAPI.request.bind(CrossVibeAPI),
-  post: CrossVibeAPI.post.bind(CrossVibeAPI),
-  put: CrossVibeAPI.put.bind(CrossVibeAPI),
-  delete: CrossVibeAPI.delete.bind(CrossVibeAPI),
-  searchUsers: CrossVibeAPI.searchUsers.bind(CrossVibeAPI),
-  getPendingRequests: CrossVibeAPI.getPendingRequests.bind(CrossVibeAPI),
-  sendFriendRequest: CrossVibeAPI.sendFriendRequest.bind(CrossVibeAPI),
-  sendFriendRequestById: CrossVibeAPI.sendFriendRequestById.bind(CrossVibeAPI),
-  respondToRequest: CrossVibeAPI.respondToRequest.bind(CrossVibeAPI),
-  cancelRequest: CrossVibeAPI.cancelRequest.bind(CrossVibeAPI),
-};

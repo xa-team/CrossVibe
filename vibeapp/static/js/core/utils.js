@@ -480,16 +480,3 @@ class CrossVibeUtils {
 
 // ===== 전역 노출 =====
 window.CrossVibeUtils = CrossVibeUtils;
-
-// 하위 호환성을 위한 기존 Utils 별칭 (추후 제거 예정)
-window.Utils = {
-  formatDate: CrossVibeUtils.formatDate.bind(CrossVibeUtils),
-  generateAvatar: CrossVibeUtils.generateAvatar.bind(CrossVibeUtils),
-  getPlatformIcon: (platform, options = { type: "emoji" }) =>
-    CrossVibeUtils.getPlatformIcon(platform, options), // 기존 호환성을 위해 이모지 기본값
-  getPlatformName: CrossVibeUtils.getPlatformName.bind(CrossVibeUtils),
-  getRelationshipInfo: CrossVibeUtils.getRelationshipInfo.bind(CrossVibeUtils),
-  debounce: CrossVibeUtils.debounce.bind(CrossVibeUtils),
-  throttle: CrossVibeUtils.throttle.bind(CrossVibeUtils),
-  setLoading: CrossVibeUtils.setLoading.bind(CrossVibeUtils),
-};

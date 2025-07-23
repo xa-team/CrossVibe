@@ -301,7 +301,7 @@ class SearchManager {
                     ${
                       statusInfo.showButton &&
                       statusInfo.buttonType !== "respond"
-                        ? `<br><button class="btn btn-sm btn-primary mt-1" onclick="event.stopPropagation(); sendFriendRequestById('${user.id}', this)">➕ 신청</button>`
+                        ? `<br><button class="btn btn-sm btn-primary mt-1" onclick="event.stopPropagation(); SearchManager.sendFriendRequestById('${user.id}', this)">➕ 신청</button>`
                         : ""
                     }
                 </div>
@@ -472,7 +472,4 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // 전역 함수로 노출 (템플릿에서 호출용)
-window.sendFriendRequestToUser = SearchManager.sendFriendRequestToUser;
-window.sendFriendRequestById = SearchManager.sendFriendRequestById;
-window.viewUserProfile = SearchManager.viewUserProfile;
-window.claerSearch = SearchManager.claerSearch;
+window.SearchManager = SearchManager;
