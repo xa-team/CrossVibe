@@ -12,10 +12,13 @@ document.addEventListener("DOMContentLoaded", function () {
  * 소셜 페이지의 초기화 로직
  */
 function initializeSocialPage() {
-  setupTabEvents();
-  setupBadgeUpdates();
+  FriendEventHandler.init();
+
   setupSearchIntegration();
-  restoreActiveTab();
+  setupKeyboardShortcuts();
+  setupLazyLoading();
+
+  SocialMetrics.measurePageLoad();
 }
 
 /**
@@ -23,7 +26,7 @@ function initializeSocialPage() {
  */
 function setupTabEvents() {
   const tabs = document.querySelectorAll(
-    '#socialTabs button[data-bs-toggle="tab"]'
+    '#socialTabs button[data-bs-toggle="tab"]',
   );
 
   tabs.forEach((tab) => {
@@ -72,18 +75,12 @@ function setupKeyboardShortcuts() {
     // Ctrl + F: 검색 박스에 포커스
     if (e.ctrlKey && e.key === "f") {
       e.preventDefault();
-      const searchInput = document.getElementById("friendUsername");
-      if (searchInput) {
-        searchInput.focus();
-      }
+      document.getElementById("friendUsername")?.focus();
     }
 
     // ESC: 검색 결과 닫기
     if (e.key === "Escape") {
-      const searchResults = document.getElementById("searchResults");
-      if (searchResults) {
-        searchResults.style.display = "none";
-      }
+      document.getElementById("searchResults").style.display = "none";
     }
 
     // Alt + 1,2: 탭 전환
@@ -106,7 +103,7 @@ function restoreActiveTab() {
   const storedTabTarget = localStorage.getItem("socialActiveTab");
   if (storedTabTarget) {
     const tabElement = document.querySelector(
-      `button[data-bs-target="${storedTabTarget}"]`
+      `button[data-bs-target="${storedTabTarget}"]`,
     );
     if (tabElement) {
       const bsTab = new bootstrap.Tab(tabElement);
@@ -141,7 +138,7 @@ function setupLazyLoading() {
     {
       rootMargin: "0px",
       threshold: 0.1, // 10%가 보일 때 트리거
-    }
+    },
   );
 
   // 모든 탭 컨텐츠에 옵저버 연결
@@ -165,7 +162,7 @@ function displaySocialSearchResults(users) {
     resultsListContainer.innerHTML = FriendRenderer.createEmptyState(
       "🔍",
       "검색 결과가 없습니다",
-      "다른 검색어로 시도해보세요"
+      "다른 검색어로 시도해보세요",
     );
   } else {
     resultsListContainer.innerHTML = users
