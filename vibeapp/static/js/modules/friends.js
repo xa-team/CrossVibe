@@ -18,6 +18,7 @@ class FriendManager {
 
       if (result.success) {
         NotificationManager.success(result.data.message);
+        FriendEventHandler.refreshPendingRequests();
         return true;
       } else {
         NotificationManager.error(result.data.error);
@@ -45,6 +46,7 @@ class FriendManager {
 
       if (result.success) {
         NotificationManager.success(result.data.message);
+        FriendEventHandler.refreshPendingRequests();
 
         if (buttonElement) {
           buttonElement.textContent = "✅ 완료";
@@ -88,6 +90,8 @@ class FriendManager {
 
             if (result.success) {
               NotificationManager.success(result.data.message);
+              FriendEventHandler.refreshPendingRequests();
+              FriendEventHandler.refreshFriendsList();
               resolve(true);
             } else {
               NotificationManager.error(result.data.error);
@@ -120,6 +124,7 @@ class FriendManager {
 
             if (result.success) {
               NotificationManager.success(result.data.message);
+              FriendEventHandler.refreshPendingRequests();
               resolve(true);
             } else {
               NotificationManager.error(result.data.error);
@@ -240,7 +245,7 @@ class FriendRenderer {
       return this.createEmptyState(
         "👥",
         "아직 친구가 없습니다",
-        "친구를 추가해서 음악 취향을 공유해보세요!",
+        "친구를 추가해서 플레이리스트를 공유해보세요!",
         '<button class="btn btn-primary" onclinck="document.getElementBtId(manage-friends-tab\')?.click()">친구 추가하기</button>'
       );
     }
@@ -360,18 +365,18 @@ class FriendRenderer {
       if (statusInfo.buttonType === "respond") {
         return `
           <button class="btn btn-success btn-sm search-action-button me-1"
-                  onclick="FriendManager.respondToRequest(${user.pending_request_id}, 'accept').then(success => success && location.reload())">
+                  onclick="FriendManager.respondToRequest(${user.pending_request_id}, 'accept')">
             ✅ 수락
           </button>
           <button class="btn btn-danger btn-sm search-action-button" 
-                  onclick="FriendManager.respondToRequest(${user.pending_request_id}, 'reject').then(success => success && location.reload())">
+                  onclick="FriendManager.respondToRequest(${user.pending_request_id}, 'reject')">
             ❌ 거절
           </button>
         `;
       } else {
         return `
           <button class="btn btn-success btn-sm search-action-button" 
-                  onclick="FriendManager.sendRequest('${user.username}').then(success => success && setTimeout(() => location.reload(), 1000))">
+                  onclick="FriendManager.sendRequest('${user.username}')">
             ➕ 신청
           </button>
         `;

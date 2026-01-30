@@ -12,13 +12,40 @@ document.addEventListener("DOMContentLoaded", function () {
  * 소셜 페이지의 초기화 로직
  */
 function initializeSocialPage() {
-  FriendEventHandler.init();
-
+  setupTabEvents();
+  setupBadgeUpdates();
   setupSearchIntegration();
-  setupKeyboardShortcuts();
-  setupLazyLoading();
+  restoreActiveTab();
+}
 
-  SocialMetrics.measurePageLoad();
+/**
+ * 탭 이벤트 처리
+ */
+function setupTabEvents() {
+  const tabs = document.querySelectorAll(
+    '#socialTabs button[data-bs-toggle="tab"]'
+  );
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("shown.bs.tab", () => {
+      const targetId = e.target.getAttribute("data-bs-target");
+
+      localStorage.setItem("socialActiveTab", targetId);
+
+      if (targetId === "#friends") {
+        FriendEventHandler.refreshFriendsList();
+      } else if (targetId === "#manage-friends") {
+        FriendEventHandler.refreshPendingRequests();
+      }
+    });
+  });
+}
+
+/**
+ * 배지 업데이트 처리
+ */
+function setupBadgeUpdates() {
+  FriendEventHandler.updatePendingRequestsBadge();
 }
 
 /**
@@ -70,6 +97,29 @@ function setupKeyboardShortcuts() {
       }
     }
   });
+}
+
+/**
+ * localStorae에 저장된 탭 상태를 복원하고 해당 탭을 활성화합니다.
+ */
+function restoreActiveTab() {
+  const storedTabTarget = localStorage.getItem("socialActiveTab");
+  if (storedTabTarget) {
+    const tabElement = document.querySelector(
+      `button[data-bs-target="${storedTabTarget}"]`
+    );
+    if (tabElement) {
+      const bsTab = new bootstrap.Tab(tabElement);
+      bsTab.show();
+    }
+  } else {
+    // 저장된 탭이 없으면 기본 탭(내 친구)을 활성화
+    const defaultTab = document.getElementById("friends-tab");
+    if (defaultTab) {
+      const bsTab = new bootstrap.Tab(defaultTab);
+      bsTab.show();
+    }
+  }
 }
 
 /**
@@ -228,3 +278,9 @@ window.SocialPage = {
 };
 
 window.SocialCache = SocialCache;
+
+setTimeout(() => {
+  setupKeyboardShortcuts();
+  setupLazyLoading();
+  SocialMetrics.measurePageLoad();
+}, 100);
