@@ -60,15 +60,15 @@
                                                     <div>
                                                         <h6 class="card-title mb-1">{{ friend.display_name or friend.username }}</h6>
                                                         <small class="text-muted">
-                                                            {% if friend.platform_connections %}
-                                                                {% for conn in friend.platform_connections %}
-                                                                    {% if conn.platform == "spotify" %}🎵 Spotify{% endif %}
-                                                                    {% if conn.platform == "youtube" %}▶️ YouTube{% endif %}
-                                                                    {% if not loop.last %},{% endif %}
-                                                                {% endfor %}
-                                                            {% else %}
-                                                                연결된 플랫폼 없음
-                                                            {% endif %}
+                                                            <div class="friend-platforms" data-username="{{ friend.username }}">
+                                                                {% if friend.platform_connections %}
+                                                                    {% for conn in friend.platform_connections %}
+                                                                        <span class="platform-icon-mini" title="{{ conn.platform }}"></span>
+                                                                    {% endfor %}
+                                                                {% else %}
+                                                                    연결된 플랫폼 없음
+                                                                {% endif %}
+                                                            </div>
                                                         </small>
                                                     </div>
                                                     <div>
@@ -257,4 +257,21 @@
             </div>
         {% endif %}
     </div>
+    {% block scripts %}
+        <script src="{{ url_for('static', filename='js/core/api.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/core/utils.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/modules/friends.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/pages/social.js') }}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.friend-platforms').forEach(container => {
+                    const icons = container.querySelectorAll('.platform-icon-mini');
+                    icons.forEach(icon => {
+                        const platform = icon.getAttribute('title');
+                        icon.innerHTML = CrossVibeUtils.getPlatformIcon(platform, {size: 18});
+                    });
+                });
+            })
+        </script>
+    {% endblock scripts %}
 {% endblock content %}
