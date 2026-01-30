@@ -83,7 +83,7 @@
             </div>
             {# 로그아웃 버튼 #}
             <div class="mt-4">
-                <button class="btn btn-outline-danger" onclick="confirmLogout()">🚪 로그아웃</button>
+                <button id="logoutBtn">🚪 로그아웃</button>
             </div>
         {% else %}
             {# 로그인 전 화면 #}
@@ -131,13 +131,23 @@
             </div>
         {% endif %}
     </div>
-    <script>
-        function confirmLogout()
-        {
-            if(confirm("로그아웃 하시겠습니까?"))
+    {% block scripts %}
+        <script src="{{url_for('static', filename='js/core/utils.js')}}"></script>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 로그아웃 버튼 이벤트 바인딩
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if(logoutBtn)
             {
-                window.location.href = "{{url_for('public.logout')}}"
+                logoutBtn.addEventListener('click', function() {
+                    if(confirm("로그아웃 하시겠습니까?"))
+                    {
+                        window.location.href = "{{url_for('public.logout')}}";
+                    }
+                })
             }
-        }
-    </script>
+        })
+        </script>
+    {% endblock scripts %}
 {% endblock content %}
