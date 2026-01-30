@@ -24,14 +24,16 @@ def home():
     """홈페이지 - 로그인 상태에 따라 다른 화면 표시"""
     user = None
     pending_requests_count = 0
-    
+
     if current_user.is_authenticated:
         user = get_current_user_safely()
         if user:
             pending_requests_count = user.get_pending_friend_requests_count()
-    
-    return render_template("public/home.html", user=user, pending_requests_count=pending_requests_count)
-    
+
+    supported_platforms = ["spotify", "youtube", "applemusic"]
+
+    return render_template("public/home.html", user=user, pending_requests_count=pending_requests_count, platform_list=supported_platforms)
+
 
 # ===== 사용자 설정 관련 =====
 
@@ -49,7 +51,7 @@ def set_username_page(user):
     #이미 사용자명이 있으면 설정 페이지로 리다이렉트
     if user.username:
         return redirect(url_for("public.settings"))
-    
+
     return render_template("user/set_username.html", user=user)
 
 
@@ -61,34 +63,34 @@ def update_username(user):
     try:
         data = request.get_json()
         new_username = data.get("username", "").strip()
-        
+
         if not new_username:
             return jsonify({"error": "사용자명을 입력해주세요."}), 400
-        
+
         # 사용자명 유효성 검사 (영문, 숫자, 언더스코어만 허용, 3-20자)
         import re
         if not re.match(r'^[a-zA-Z0-9_]{3,20}$', new_username):
             return jsonify({"error": "사용자명은 영문, 숫자, 언더스코어만 사용하여 3-20자로 입력해주세요."}), 400
-        
+
         # 중복 확인 (자신 제외)
         existing_user = User.query.filter(
             User.username == new_username,
             User.id != user.id
         ).first()
-        
+
         if existing_user:
             return jsonify({"error": "이미 사용중인 사용자명입니다."}), 400
-        
+
         # 사용자명 업데이트
         user.username = new_username
         db.session.commit()
-        
+
         return jsonify({"success": True, "message": "사용자명이 설정되었습니다!"}), 200
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "사용자명 설정 중 오류가 발생했습니다."}), 500
-    
+
 
 
 # ===== 인증 관련 =====
@@ -98,7 +100,7 @@ def login_platform(platform):
     platform_config = Config.PLATFORM_OAUTH.get(platform)
     if not platform_config:
         raise UnsupportedPlatformError(f"{platform}은(는) 아직 지원하지 않는 플랫폼입니다.", 400)
-    
+
     params = {
         **platform_config["PARAMS"],
         "client_id": platform_config["CLIENT_ID"],
@@ -107,9 +109,9 @@ def login_platform(platform):
 
     auth_url = platform_config["AUTH_URL"]
     return redirect(f"{auth_url}?{urlencode(params)}")
-    
+
     #elif platform == "Youtube":
-    
+
 
 @public_bp.route("/logout")
 def logout():
@@ -130,7 +132,7 @@ def callback_platform(platform):
     code = request.args.get("code")
     if not code:
         raise TokenRefreshError("Authorization code가 없습니다.", 400)
-    
+
     # 2. 토큰 요청
     token_payload = {
         "grant_type": "authorization_code",
@@ -156,7 +158,7 @@ def callback_platform(platform):
     )
     if user_info_res.status_code != 200:
         print("📡 user_info_res.status:", user_info_res.status_code)
-        print("📡 user_info_res.text:", user_info_res.text) 
+        print("📡 user_info_res.text:", user_info_res.text)
         raise TokenRefreshError(f"사용자 정보 요청 실패", 400)
 
     user_info = user_info_res.json()
@@ -172,13 +174,13 @@ def callback_platform(platform):
     if connection:
         user = connection.user
         token = connection.token
-        
+
         #기존 토큰 업데이트
         token.access_token = access_token
         token.refresh_token = refresh_token or token.refresh_token
         token.expire_at = expire_at
         db.session.commit()
-        
+
     else:
         # 5. 새 유저 + 연결 생성
         user = User(display_name=display_name)
@@ -205,7 +207,7 @@ def callback_platform(platform):
         db.session.commit()
 
     login_user(user)
-    
+
 
     # 6. 세션 저장 (멀티플랫폼 대응)
     session_user = session.get("user", {"id": user.id, "platforms": {}})
