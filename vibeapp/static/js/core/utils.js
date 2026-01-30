@@ -67,7 +67,7 @@ class CrossVibeUtils {
   static getPlatformIcon(platform, options) {
     const defaultOptions = {
       type: "svgImages", // 'emoji' 또는 'image'
-      size: "100%",
+      size: 24,
     };
     const opts = { ...defaultOptions, ...options };
 
