@@ -69,7 +69,8 @@
                                     <small class="text-muted">친구</small>
                                 </div>
                                 <div class="col-4">
-                                    <div class="h5 mb-1">{{ user.platform_connections|length }}</div>
+                                    <div class="h5 mb-1 d-flex justify-content-center gap-1"
+                                         id="connectedPlatforms">{{ user.platform_connections|length }}</div>
                                     <small class="text-muted">연결된 플랫폼</small>
                                 </div>
                                 <div class="col-4">
@@ -100,28 +101,13 @@
                         </div>
                         <div class="card-body">
                             <p class="mb-3">플랫폼을 선택해 로그인하세요:</p>
-                            {% set platforms = {
-                                "spotify": {
-                                    "label": "Spotify",
-                                    "class": "btn-success",
-                                    "emoji": "🎵"
-                                },
-                                "youtube": {
-                                    "label": "YouTube Music",
-                                    "class": "btn-danger",
-                                    "emoji": "▶️"
-                                },
-                                "applemusic": {
-                                    "label": "Apple Music",
-                                    "class": "btn-secondary",
-                                    "emoji": "🍎"
-                                }
-                            } %}
-                            <div class="d-grid gap-2">
-                                {% for platform, info in platforms.items() %}
+                            <div class="d-grid gap-2" id="loginPlatformContainer">
+                                {% for platform in platform_list %}
                                     <a href="{{ url_for('public.login_platform', platform=platform) }}"
-                                       class="btn {{ info.class }} btn-lg">
-                                        {{ info.emoji }} {{ info.label }}(으)로 시작하기
+                                       class="btn btn-lg btn-outline-dark d-flex align-items-center justify-content-center gap-2 platform-login-btn"
+                                       data-platform="{{ platform }}">
+                                        <span class="platform-icon"></span>
+                                        <span class="platform-name"></span>
                                     </a>
                                 {% endfor %}
                             </div>
@@ -137,7 +123,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             // 로그아웃 버튼 이벤트 바인딩
             const logoutBtn = document.getElementById('logoutBtn');
-
             if(logoutBtn)
             {
                 logoutBtn.addEventListener('click', function() {
@@ -147,7 +132,20 @@
                     }
                 })
             }
-        })
+
+            document.querySelectorAll('.platform-login-btn').forEach(btn => {
+                const p = btn.dataset.platform;
+                btn.querySelector('.platform-icon').innerHTML = CrossVibeUtils.getPlatformIcon(p, {size:24});
+                btn.querySelector('.platform-name').textContent = CrossVibeUtils.getPlatformName(p) + "로 시작하기";
+            });
+
+            const connContainer = document.getElementById('connectedPlatforms');
+            if(connContainer && {{ (user.platform_connections | map(attribute='platform') | list | tojson) if user else '[]'}}.length > 0)
+            {
+                const platforms = {{ (user.platform_connections | map(attribute='platform') | list | tojson) if user else '[]'}};
+                connContainer.innerHTML = platforms.map(p => CrossVibeUtils.getPlatformIcon(p, {size: 18})).join(' ');
+            }
+        });
         </script>
     {% endblock scripts %}
 {% endblock content %}
