@@ -302,6 +302,7 @@ class CrossVibeUtils {
       };
     }
 
+    if (trimmed.length > 20) {
       return { valid: false, message: "사용자명은 최대 20까지 가능합니다." };
     }
 
