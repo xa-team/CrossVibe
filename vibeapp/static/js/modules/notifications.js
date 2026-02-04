@@ -419,23 +419,3 @@ if (document.readyState === "loading") {
 
 // ===== 전역 노출 =====
 window.NotificationManager = NotificationManager;
-
-// 하위 호환성을 위한 기존 함수 별칭 (추후 제거 예정)
-window.showNotification = (message, type = "info") => {
-  NotificationManager.show(message, type);
-};
-
-window.showToast = (message, type = "info", duration = 3000) => {
-  NotificationManager.show(message, type, { duration });
-};
-
-window.showConfirm = (message, callback) => {
-  NotificationManager.confirm(message, callback);
-};
-
-// Utils 객체에도 추가 (기존 코드와의 호환성)
-if (window.Utils) {
-  window.Utils.showNotification = window.showNotification;
-  window.Utils.showToast = window.showToast;
-  window.Utils.showConfirm = window.showConfirm;
-}

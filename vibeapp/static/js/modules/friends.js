@@ -1,12 +1,6 @@
 // ===== 친구 관리 시스템 =====
 
 /**
- * 친구 신청 응답
- * @param {number}
- */
-async function repspondToFriendRequest(requestId, action) {}
-
-/**
  * 친구 관리 비즈니스 로직 클래스
  * API 호출은 CrossVibeAPI에 위임, UI 관련 로직에만 집중
  */
@@ -24,6 +18,7 @@ class FriendManager {
 
       if (result.success) {
         NotificationManager.success(result.data.message);
+        FriendEventHandler.refreshPendingRequests();
         return true;
       } else {
         NotificationManager.error(result.data.error);
@@ -51,6 +46,7 @@ class FriendManager {
 
       if (result.success) {
         NotificationManager.success(result.data.message);
+        FriendEventHandler.refreshPendingRequests();
 
         if (buttonElement) {
           buttonElement.textContent = "✅ 완료";
@@ -94,6 +90,8 @@ class FriendManager {
 
             if (result.success) {
               NotificationManager.success(result.data.message);
+              FriendEventHandler.refreshPendingRequests();
+              FriendEventHandler.refreshFriendsList();
               resolve(true);
             } else {
               NotificationManager.error(result.data.error);
@@ -126,6 +124,7 @@ class FriendManager {
 
             if (result.success) {
               NotificationManager.success(result.data.message);
+              FriendEventHandler.refreshPendingRequests();
               resolve(true);
             } else {
               NotificationManager.error(result.data.error);
@@ -246,7 +245,7 @@ class FriendRenderer {
       return this.createEmptyState(
         "👥",
         "아직 친구가 없습니다",
-        "친구를 추가해서 음악 취향을 공유해보세요!",
+        "친구를 추가해서 플레이리스트를 공유해보세요!",
         '<button class="btn btn-primary" onclinck="document.getElementBtId(manage-friends-tab\')?.click()">친구 추가하기</button>'
       );
     }
@@ -366,18 +365,18 @@ class FriendRenderer {
       if (statusInfo.buttonType === "respond") {
         return `
           <button class="btn btn-success btn-sm search-action-button me-1"
-                  onclick="FriendManager.respondToRequest(${user.pending_request_id}, 'accept').then(success => success && location.reload())">
+                  onclick="FriendManager.respondToRequest(${user.pending_request_id}, 'accept')">
             ✅ 수락
           </button>
           <button class="btn btn-danger btn-sm search-action-button" 
-                  onclick="FriendManager.respondToRequest(${user.pending_request_id}, 'reject').then(success => success && location.reload())">
+                  onclick="FriendManager.respondToRequest(${user.pending_request_id}, 'reject')">
             ❌ 거절
           </button>
         `;
       } else {
         return `
           <button class="btn btn-success btn-sm search-action-button" 
-                  onclick="FriendManager.sendRequest('${user.username}').then(success => success && setTimeout(() => location.reload(), 1000))">
+                  onclick="FriendManager.sendRequest('${user.username}')">
             ➕ 신청
           </button>
         `;
@@ -459,7 +458,7 @@ class FriendEventHandler {
    */
   static setupSocialTabEvents() {
     const tabs = document.querySelectorAll(
-      '#socialTabs button[data-bs-toggle="tab"'
+      '#socialTabs button[data-bs-toggle="tab"]'
     );
 
     tabs.forEach((tab) => {
@@ -500,8 +499,6 @@ class FriendEventHandler {
       const friends = await FriendManager.getFriends();
       container.innerHTML = FriendRenderer.generateFriendsHTML(friends);
     } catch (error) {
-      const errorMessage = CrossVibeUtils.handleError(error, "친구 목록 로드");
-
       container.innerHTML = FriendRenderer.createEmptyState(
         "❌",
         "친구 목록을 불러올 수 없습니다",
@@ -525,8 +522,6 @@ class FriendEventHandler {
 
       this.updatePendingRequestsBadge(request.length);
     } catch (error) {
-      console.error(error);
-
       container.innerHTML = FriendRenderer.createEmptyState(
         "❌",
         "신청 목록을 불러올 수 없습니다",
@@ -539,15 +534,14 @@ class FriendEventHandler {
    * 받은 신청 배지 업데이트
    * @param {number} count - 신청 개수
    */
-  static updatePendingRequestsBadge(count = null) {
+  static async updatePendingRequestsBadge(count = null) {
     const badge = document.querySelector("#manage-friends-tab .badge");
     if (!badge) return;
 
     if (count === null) {
       // count가 조회되지 않으면 API에서 조회
-      FriendManager.getPendingRequests().then((requests) => {
-        this.updatePendingRequestsBadge(requests.length);
-      });
+      const request = await FriendManager.getPendingRequests();
+      this.updatePendingRequestsBadge(request.length);
       return;
     }
 
@@ -582,13 +576,3 @@ if (document.readyState === "loading") {
 } else {
   FriendEventHandler.init();
 }
-
-// ===== 하위 호환성 (기존 템플릿과의 호환성 보장) =====
-window.respondToRequest = (requestId, action) => {
-  FriendManager.respondToRequest(requestId, action).then((success) => {
-    if (success) setTimeout(() => location.reload(), 1000);
-  });
-};
-
-window.viewFriendProfile = FriendManager.viewProfile;
-window.sendFriendRequestToUser = FriendManager.sendRequest;

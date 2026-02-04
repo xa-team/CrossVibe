@@ -85,7 +85,6 @@ class CrossVibeUtils {
       spotify: "https://cdn-icons-png.flaticon.com/24/174/174872.png",
       youtube: "https://cdn-icons-png.flaticon.com/24/1384/1384060.png",
       applemusic: "https://icons8.com/icon/81TSi6Gqk0tm/music",
-      apple: "https://cdn-icons-png.flaticon.com/24/888/888857.png",
       default: "https://cdn-icons-png.flaticon.com/24/651/651758.png", // 음악 아이콘
     };
 
@@ -100,9 +99,9 @@ class CrossVibeUtils {
         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
       </svg>`,
       applemusic: `
-      <svg width="${opts.size}" height="${opts.size}" viewBox="0 0 24 24" fill="#FA243C">
-        <path d="M23.997 6.124c0-.738-.065-1.47-.24-2.19-.317-1.31-1.062-2.31-2.18-3.043C21.003.517 20.373.285 19.7.164c-.517-.093-1.038-.135-1.564-.15-.04-.001-.08-.004-.12-.004H6.084c-.04 0-.08.003-.12.004-.526.015-1.047.057-1.564.15-.673.121-1.303.353-1.877.727C1.401 1.614.656 2.614.34 3.924.165 4.644.1 5.376.1 6.124v11.752c0 .748.065 1.48.24 2.2.317 1.31 1.062 2.31 2.18 3.043.574.374 1.204.606 1.877.727.517.093 1.038.135 1.564.15.04.001.08.004.12.004h11.913c.04 0 .08-.003.12-.004.526-.015 1.047-.057 1.564-.15.673-.121 1.303-.353 1.877-.727 1.118-.733 1.863-1.734 2.18-3.043.175-.72.24-1.452.24-2.2V6.124z"/>
-        <path fill="#fff" d="M18.598 7.346c-.414 0-.75.336-.75.75v6.188c0 1.035-.841 1.876-1.876 1.876s-1.876-.841-1.876-1.876.841-1.876 1.876-1.876c.179 0 .352.025.515.073V8.096c0-.414.336-.75.75-.75s.75.336.75.75v3.438c0 1.864-1.512 3.376-3.376 3.376s-3.376-1.512-3.376-3.376 1.512-3.376 3.376-3.376c.221 0 .437.021.648.063.414.083.683.478.6.892-.083.414-.478.683-.892.6-.118-.024-.24-.055-.356-.055-1.035 0-1.876.841-1.876 1.876s.841 1.876 1.876 1.876 1.876-.841 1.876-1.876V8.096c0-.414.336-.75.75-.75z"/>
+      <svg width="${opts.size}" height="${opts.size}" viewBox="0 0 24 24" fill="none">
+      <rect width="24" height="24" rx="6" fill="#FA243C"/>
+      <path d="M16.5 7V13.5C16.5 14.8807 15.3807 16 14 16C12.6193 16 11.5 14.8807 11.5 13.5C11.5 12.1193 12.6193 11 14 11C14.175 11 14.345 11.021 14.508 11.06V8.5H11V13.5C11 14.8807 9.88071 16 8.5 16C7.11929 16 6 14.8807 6 13.5C6 12.1193 7.11929 11 8.5 11C8.675 11 8.845 11.021 9.008 11.06V7H16.5Z" fill="white"/>
       </svg>`,
     };
 
@@ -303,18 +302,18 @@ class CrossVibeUtils {
       };
     }
 
-    if (trimmed.length < 20) {
+    if (trimmed.length > 20) {
       return { valid: false, message: "사용자명은 최대 20까지 가능합니다." };
     }
 
     if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
       return {
         valid: false,
-        msg: "사용자명은 영문, 숫자, 언더스코어(_)만 가능합니다.",
+        message: "사용자명은 영문, 숫자, 언더스코어(_)만 가능합니다.",
       };
     }
 
-    return { valid: true, msg: "사용 가능한 사용자명입니다." };
+    return { valid: true, message: "사용 가능한 사용자명입니다." };
   }
 
   /**
@@ -480,16 +479,3 @@ class CrossVibeUtils {
 
 // ===== 전역 노출 =====
 window.CrossVibeUtils = CrossVibeUtils;
-
-// 하위 호환성을 위한 기존 Utils 별칭 (추후 제거 예정)
-window.Utils = {
-  formatDate: CrossVibeUtils.formatDate.bind(CrossVibeUtils),
-  generateAvatar: CrossVibeUtils.generateAvatar.bind(CrossVibeUtils),
-  getPlatformIcon: (platform, options = { type: "emoji" }) =>
-    CrossVibeUtils.getPlatformIcon(platform, options), // 기존 호환성을 위해 이모지 기본값
-  getPlatformName: CrossVibeUtils.getPlatformName.bind(CrossVibeUtils),
-  getRelationshipInfo: CrossVibeUtils.getRelationshipInfo.bind(CrossVibeUtils),
-  debounce: CrossVibeUtils.debounce.bind(CrossVibeUtils),
-  throttle: CrossVibeUtils.throttle.bind(CrossVibeUtils),
-  setLoading: CrossVibeUtils.setLoading.bind(CrossVibeUtils),
-};

@@ -23,17 +23,10 @@
                         <!-- 플랫폼 연결 정보 -->
                         <div class="mb-4">
                             {% if profile_user.platform_connections %}
-                                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                <div class="user-platforms d-flex justify-content-center gap-3 flex-wrap"
+                                     data-username="profile_user.username">
                                     {% for conn in profile_user.platform_connections %}
-                                        <span class="badge bg-light text-dark px-3 py-2">
-                                            {% if conn.platform == "spotify" %}
-                                                🎵 Spotify
-                                            {% elif conn.platform == "youtube" %}
-                                                ▶️ YouTube Music
-                                            {% else %}
-                                                {{ conn.platform|title }}
-                                            {% endif %}
-                                        </span>
+                                        <span class="platform-icon-mini" title="{{ conn.platform }}"></span>
                                     {% endfor %}
                                 </div>
                             {% else %}
@@ -87,7 +80,14 @@
                                 <div class="text-muted">친구</div>
                             </div>
                             <div class="col-4">
-                                <div class="h4 text-success">{{ profile_user.platform_connections|length }}</div>
+                                {% if profile_user.platform_connections %}
+                                    <div class="user-platforms d-flex justify-content-center gap-3 flex-wrap"
+                                         data-username="profile_user.username">
+                                        {% for conn in profile_user.platform_connections %}
+                                            <span class="platform-icon-mini" title="{{ conn.platform }}"></span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                                 <div class="text-muted">연결된 플랫폼</div>
                             </div>
                             <div class="col-4">
@@ -209,4 +209,21 @@
             </div>
         {% endif %}
     </div>
+    {% block scripts %}
+        <script src="{{ url_for('static', filename='js/core/api.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/core/utils.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/modules/friends.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/pages/social.js') }}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.user-platforms').forEach(container => {
+                    const icons = container.querySelectorAll('.platform-icon-mini');
+                    icons.forEach(icon => {
+                        const platform = icon.getAttribute('title');
+                        icon.innerHTML = CrossVibeUtils.getPlatformIcon(platform, {size: 24});
+                    });
+                });
+            });
+        </script>
+    {% endblock scripts %}
 {% endblock content %}

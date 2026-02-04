@@ -35,8 +35,6 @@
                                         ✅ 사용자명 설정
                                     {% endif %}
                                 </button>
-                                <a href="{{ url_for('public.settings') }}"
-                                   class="btn btn-outline-secondary">설정에서 변경하기</a>
                             </div>
                         </form>
                         <div class="mt-4 p-3 bg-light rounded">
@@ -53,64 +51,68 @@
             </div>
         </div>
     </div>
-    <script>
-document.getElementById('usernameForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const username = document.getElementById('username').value.trim();
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    
-    if (!username) {
-        alert('사용자명을 입력해주세요.');
-        return;
-    }
+    {% block scripts %}
+        <script src="{{url_for('static', filename='js/core/api.js')}}"></script>
+        <script src="{{url_for('static', filename='js/core/utils.js')}}"></script>
+        <script src="{{url_for('static', filename='js/modules/notifications.js')}}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.getElementById('usernameForm');
+                const usernameInput = document.getElementById('username');
+                const submitBtn = document.getElementById('submitBtn');
 
-    // 버튼 비활성화 및 로딩 표시
-    submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ 처리중...';
+                usernameInput.addEventListener('input', function(e) {
+                    const username = e.target.value;
 
-    try {
-        const response = await fetch('/update-username', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username: username })
-        });
+                    if(!username) {
+                        e.target.setCustomValidity('');
+                        return;
+                    }
 
-        const result = await response.json();
-        
-        if (response.ok) {
-            alert(result.message);
-            window.location.href = "{{ url_for('public.home') }}";
-        } else {
-            alert('오류: ' + result.error);
-        }
-    } catch (error) {
-        alert('네트워크 오류가 발생했습니다.');
-        console.error('Error:', error);
-    } finally {
-        // 버튼 다시 활성화
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-    }
-});
+                    const check = CrossVibeUtils.validateUsername(username);
 
-// 실시간 유효성 검사
-document.getElementById('username').addEventListener('input', function(e) {
-    const username = e.target.value;
-    const regex = /^[a-zA-Z0-9_]{0,20}$/;
-    
-    if (!regex.test(username)) {
-        e.target.setCustomValidity('영문, 숫자, 언더스코어만 사용하여 20자 이하로 입력해주세요.');
-    } else if (username.length > 0 && username.length < 3) {
-        e.target.setCustomValidity('최소 3자 이상 입력해주세요.');
-    } else {
-        e.target.setCustomValidity('');
-    }
-    
-    e.target.reportValidity();
-});
-    </script>
+                    if(!check.valid) {
+                        e.target.setCustomValidity(check.message);
+                    } else {
+                        e.target.setCustomValidity('');
+                    }
+                    
+                    e.target.reportValidity();
+                });
+
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const username = usernameInput.value.trim();
+
+                    const validation = CrossVibeUtils.validateUsername(username);
+                    if(!validation.valid) {
+                        NotificationManager.warning(validation.message);
+                        usernameInput.focus();
+                        return;
+                    }
+
+                    CrossVibeUtils.setLoading(submitBtn, true);
+
+                    try {
+                        const result = await CrossVibeAPI.updateUsername(username);
+
+                        if(result.success) {
+                            NotificationManager.success(result.data.message || "사용자명이 설정되었습니다.");
+
+                            setTimeout(() => {
+                                window.location.href = "{{ url_for('public.home') }}";
+                            }, 1000);
+                        } else {
+                            NotificationManager.error(result.error || "사용자명 설정 실패");
+                        }
+                    } catch (error) {
+                        NotificationManager.error(CrossVibeUtils.handleError(error, '사용자명 설정'));
+                    } finally {
+                        CrossVibeUtils.setLoading(submitBtn, false);
+                    }
+                })
+            })
+        </script>
+    {% endblock scripts %}
 {% endblock content %}

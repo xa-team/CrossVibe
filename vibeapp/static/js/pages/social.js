@@ -22,6 +22,36 @@ function initializeSocialPage() {
 }
 
 /**
+ * 탭 이벤트 처리
+ */
+function setupTabEvents() {
+  const tabs = document.querySelectorAll(
+    '#socialTabs button[data-bs-toggle="tab"]',
+  );
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("shown.bs.tab", () => {
+      const targetId = e.target.getAttribute("data-bs-target");
+
+      localStorage.setItem("socialActiveTab", targetId);
+
+      if (targetId === "#friends") {
+        FriendEventHandler.refreshFriendsList();
+      } else if (targetId === "#manage-friends") {
+        FriendEventHandler.refreshPendingRequests();
+      }
+    });
+  });
+}
+
+/**
+ * 배지 업데이트 처리
+ */
+function setupBadgeUpdates() {
+  FriendEventHandler.updatePendingRequestsBadge();
+}
+
+/**
  * search.js 모듈과의 연동을 설정
  * search.js에서 검색 결과를 표시할 때 호출할 함수를 전역으로 노출
  */
@@ -45,18 +75,12 @@ function setupKeyboardShortcuts() {
     // Ctrl + F: 검색 박스에 포커스
     if (e.ctrlKey && e.key === "f") {
       e.preventDefault();
-      const searchInput = document.getElementById("friendUsername");
-      if (searchInput) {
-        searchInput.focus();
-      }
+      document.getElementById("friendUsername")?.focus();
     }
 
     // ESC: 검색 결과 닫기
     if (e.key === "Escape") {
-      const searchResults = document.getElementById("searchResults");
-      if (searchResults) {
-        searchResults.style.display = "none";
-      }
+      document.getElementById("searchResults").style.display = "none";
     }
 
     // Alt + 1,2: 탭 전환
@@ -70,6 +94,29 @@ function setupKeyboardShortcuts() {
       }
     }
   });
+}
+
+/**
+ * localStorae에 저장된 탭 상태를 복원하고 해당 탭을 활성화합니다.
+ */
+function restoreActiveTab() {
+  const storedTabTarget = localStorage.getItem("socialActiveTab");
+  if (storedTabTarget) {
+    const tabElement = document.querySelector(
+      `button[data-bs-target="${storedTabTarget}"]`,
+    );
+    if (tabElement) {
+      const bsTab = new bootstrap.Tab(tabElement);
+      bsTab.show();
+    }
+  } else {
+    // 저장된 탭이 없으면 기본 탭(내 친구)을 활성화
+    const defaultTab = document.getElementById("friends-tab");
+    if (defaultTab) {
+      const bsTab = new bootstrap.Tab(defaultTab);
+      bsTab.show();
+    }
+  }
 }
 
 /**
@@ -91,7 +138,7 @@ function setupLazyLoading() {
     {
       rootMargin: "0px",
       threshold: 0.1, // 10%가 보일 때 트리거
-    }
+    },
   );
 
   // 모든 탭 컨텐츠에 옵저버 연결
@@ -115,7 +162,7 @@ function displaySocialSearchResults(users) {
     resultsListContainer.innerHTML = FriendRenderer.createEmptyState(
       "🔍",
       "검색 결과가 없습니다",
-      "다른 검색어로 시도해보세요"
+      "다른 검색어로 시도해보세요",
     );
   } else {
     resultsListContainer.innerHTML = users
@@ -228,3 +275,9 @@ window.SocialPage = {
 };
 
 window.SocialCache = SocialCache;
+
+setTimeout(() => {
+  setupKeyboardShortcuts();
+  setupLazyLoading();
+  SocialMetrics.measurePageLoad();
+}, 100);

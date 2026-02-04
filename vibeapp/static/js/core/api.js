@@ -34,7 +34,7 @@ class CrossVibeAPI {
         } catch (error) {
           console.warn(
             `[CrossVibeAPI] 성공 응답이지만 JSON 파싱 실패 (${url}):`,
-            error
+            error,
           );
           result = {
             message:
@@ -63,7 +63,7 @@ class CrossVibeAPI {
           `[CrossVibeAPI] 요청 실패 (${url}): 상태 코드 ${response.status}`,
           `메시지: ${errorMessage}`,
           `원본 오류 데이터:`,
-          errorData
+          errorData,
         );
 
         return {
@@ -78,7 +78,7 @@ class CrossVibeAPI {
         `[CrossVibeAPI] 네트워크 또는 파싱 오류 (${url}):`,
         error.name, // Error 타입 (e.g., TypeError, AbortError)
         error.message, // Error 메시지
-        error // 전체 Error 객체
+        error, // 전체 Error 객체
       );
 
       return {
@@ -138,14 +138,14 @@ class CrossVibeAPI {
     }
 
     const result = await this.request(
-      `/api/search-users?q=${encodeURIComponent(query.trim())}`
+      `/api/search-users?q=${encodeURIComponent(query.trim())}`,
     );
 
     if (result.success) {
       return result.data.users || [];
     } else {
       throw new Error(
-        result.data?.error || "사용자 검색 중 오류가 발생했습니다."
+        result.data?.error || "사용자 검색 중 오류가 발생했습니다.",
       );
     }
   }
@@ -176,7 +176,7 @@ class CrossVibeAPI {
       return result.data.requests || [];
     } else {
       throw new Error(
-        result.data?.error || "친구 신청 목록을 불러올 수 없습니다."
+        result.data?.error || "친구 신청 목록을 불러올 수 없습니다.",
       );
     }
   }
@@ -248,19 +248,7 @@ class CrossVibeAPI {
    * @returns {Promise<Object>} 응답 결과
    */
   static async updateUsername(username) {
-    if (!username || typeof username !== "string") {
-      throw new Error("올바른 사용자명을 입력해주세요 .");
-    }
-
-    // 클라이언트 측 유효성 검사
-    const trimmedUsername = username.trim();
-    if (!/^[a-zA-z0-9_]{3,20}$/.test(trimmedUsername)) {
-      throw new Error(
-        "사용자명은 영문, 숫자, 언더스코어(_)만 사용하여 3-20자로 입력해주세요."
-      );
-    }
-
-    return await this.post("/update-username", { username: trimmedUsername });
+    return await this.post("/update-username", { username: username });
   }
 
   // ===== 에러 처리 헬퍼 =====
@@ -290,17 +278,3 @@ class CrossVibeAPI {
 
 // ===== 전역 노출 =====
 window.CrossVibeAPI = CrossVibeAPI;
-
-// 하위 호환성을 위한 기존 API 별칭 (추후 제거 예정)
-window.API = {
-  request: CrossVibeAPI.request.bind(CrossVibeAPI),
-  post: CrossVibeAPI.post.bind(CrossVibeAPI),
-  put: CrossVibeAPI.put.bind(CrossVibeAPI),
-  delete: CrossVibeAPI.delete.bind(CrossVibeAPI),
-  searchUsers: CrossVibeAPI.searchUsers.bind(CrossVibeAPI),
-  getPendingRequests: CrossVibeAPI.getPendingRequests.bind(CrossVibeAPI),
-  sendFriendRequest: CrossVibeAPI.sendFriendRequest.bind(CrossVibeAPI),
-  sendFriendRequestById: CrossVibeAPI.sendFriendRequestById.bind(CrossVibeAPI),
-  respondToRequest: CrossVibeAPI.respondToRequest.bind(CrossVibeAPI),
-  cancelRequest: CrossVibeAPI.cancelRequest.bind(CrossVibeAPI),
-};
