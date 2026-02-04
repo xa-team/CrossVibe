@@ -309,11 +309,11 @@ class CrossVibeUtils {
     if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
       return {
         valid: false,
-        msg: "사용자명은 영문, 숫자, 언더스코어(_)만 가능합니다.",
+        message: "사용자명은 영문, 숫자, 언더스코어(_)만 가능합니다.",
       };
     }
 
-    return { valid: true, msg: "사용 가능한 사용자명입니다." };
+    return { valid: true, message: "사용 가능한 사용자명입니다." };
   }
 
   /**

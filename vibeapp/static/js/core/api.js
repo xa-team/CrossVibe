@@ -248,7 +248,7 @@ class CrossVibeAPI {
    * @returns {Promise<Object>} 응답 결과
    */
   static async updateUsername(username) {
-    return await this.post("/update-username", { username: trimmedUsername });
+    return await this.post("/update-username", { username: username });
   }
 
   // ===== 에러 처리 헬퍼 =====
