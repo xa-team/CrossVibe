@@ -5,19 +5,41 @@
 {% block content %}
     <h2>{{ platform|capitalize }}의 플레이리스트</h2>
     {% if playlists %}
-        <ul class="list-group mt-4">
+        <div class="list-group mt-4">
             {% for pl in playlists %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    {{ pl.name }}
-                    {% if pl.is_public %}
-                        <span class="badge bg-success">Public</span>
-                    {% else %}
-                        <span class="badge bg-secondary">Private</span>
-                    {% endif %}
-                </li>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="platform-icon-playlist" title="{{ pl.platform }}"></span>
+                        <div>
+                            <h5 class="mb-0">{{ pl.name }}</h5>
+                            <small class="text-muted">{{ pl.platform | title }}</small>
+                        </div>
+                    </div>
+                    <div>
+                        {% if pl.is_public %}
+                            <span class="badge bg-success">Public</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Private</span>
+                        {% endif %}
+                    </div>
+                </div>
             {% endfor %}
-        </ul>
+        </div>
     {% else %}
-        <p class="mt-3 text-muted">플레이리스트가 없습니다.</p>
+        <div class="text-center py-5">
+            <div class="display-4 text-muted mb-3">📭</div>
+            <p class="text-muted">불러온 플레이리스트가 없습니다.</p>
+            <a href="{{ url_for('public.settings') }}" class="btn btn-primary">플랫폼 연결하기</a>
+        </div>
     {% endif %}
+    {% block scripts %}
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.platform-icon-playlist').forEach(icon => {
+                const platform = icon.getAttribute('title');
+                icon.innerHTML = CrossVibeUtils.getPlatformIcon(platform, {size: 32});
+            });
+        });
+        </script>
+    {% endblock scripts %}
 {% endblock content %}
