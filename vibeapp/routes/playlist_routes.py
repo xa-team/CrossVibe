@@ -12,14 +12,15 @@ playlist_bp = Blueprint("playlist", __name__,)
 
 #플레이리스트 라우터
 @playlist_bp.route("/my-playlists")
-@login_required
-def my_playlists():
-    user_data = session.get("user")
-    active_platform = user_data.get("active_platform")
-    platform_info = user_data["platforms"].get(active_platform)
+@require_user_safely()
+def my_playlists(user):
+    user_session = session.get("user", {})
+    active_platform = user_session.get("active_platform")
 
-    connection_id = platform_info["connection_id"]
-    connection = PlatformConnection.query.get(connection_id)
+    connection = next((c for c in user.platform_connections if c.platform == active_platform), None)
+
+    if not active_platform or not connection:
+        return redirect((url_for("public.home")))
 
     playlist_service = PlaylistService()
     playlist_service.get_and_save_playlists(connection)
