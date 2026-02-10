@@ -32,7 +32,7 @@ class Track(db.Model): # 일단 Spotify 기준. 향후 다른 플랫폼 추가�
     title = db.Column(db.String(255), nullable=False)
     artist = db.Column(db.String(255), nullable=False)
     album = db.Column(db.String(255), nullable=False)
-    duration = db.Column(db.Integer, nullable=False)
+    duration_ms = db.Column(db.Integer, nullable=False)
     preview_url = db.Column(db.String(500), nullable=True)
     image_url = db.Column(db.String(500), nullable=True)
 
