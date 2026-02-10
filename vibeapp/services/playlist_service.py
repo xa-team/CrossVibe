@@ -29,21 +29,15 @@ class PlaylistService:
         else:
             raise UnsupportedPlatformError(f"{platform} 플레이리스트는 지원되지 않습니다.")
 
-    def get_and_save_playlist_detail(self, playlist_id, current_user_id):
+    def get_and_save_playlist_detail(self, playlist_id):
         """플레이리스트 상세 정보 및 트랙 가져오기"""
 
         playlist = Playlist.query.get(playlist_id)
         if not playlist:
             raise ValueError("플레이리스트를 찾을 수 없습니다.")
 
-        owner_id = playlist.platform_connection.user_id
-
-        # 권한 확인
-        if owner_id != current_user_id or Friend.are_friends(current_user_id, owner_id):
-            raise PermissionError("이 플레이리스트를 볼 권한이 없습니다.")
-
         connection = playlist.platform_connection
-        platform = connection.platform_lower()
+        platform = connection.platform.lower()
 
         if platform == "spotify":
             access_token = self.auth.refresh_token(connection)

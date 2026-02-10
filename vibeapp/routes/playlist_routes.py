@@ -4,6 +4,7 @@ from flask_login import login_required
 from vibeapp.exceptions import UnsupportedPlatformError
 from vibeapp.models.platform_connection import PlatformConnection
 from vibeapp.models.playlist import Playlist
+from vibeapp.models.user import User
 from vibeapp.services.playlist_service import PlaylistService
 from vibeapp.utils.auth_utils import require_user_safely
 
@@ -37,16 +38,25 @@ def my_playlists(user):
 @require_user_safely()
 def playlist_detail(user, playlist_id):
     try:
+        playlist = Playlist.query.get_or_404(playlist_id)
+
         current_user_id = user.id
+        me = User.query.get(current_user_id)
+
+        owner_id = playlist.platform_connection.user_id
+
+        is_owner = (owner_id == me.id)
+        is_friend = me.is_friend_with(owner_id)
+
+        if not is_owner and not is_friend:
+            flash("친구의 플레이리스트만 볼 수 있습니다.", "danger")
+            return redirect(url_for("social.main"))
 
         playlist_service = PlaylistService()
-        data = playlist_service.get_and_save_playlist_detail(playlist_id, current_user_id)
+        data = playlist_service.get_and_save_playlist_detail(playlist_id)
 
         return render_template("playlist/playlist_detail.html", playlist=data["playlist"], tracks=data["tracks"])
 
-    except PermissionError:
-        flash("친구의 플레이리스트만 볼 수 있습니다.", "danger")
-        return redirect(url_for("public.home"))
     except UnsupportedPlatformError as e:
         flash(str(e), "warning")
         return redirect(url_for("public.home"))
