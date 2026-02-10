@@ -3,7 +3,7 @@ from datetime import datetime, time, timezone, timedelta
 
 from vibeapp.config import Config
 from vibeapp.extensions import db
-from vibeapp.models.playlist import Playlist
+from vibeapp.models.playlist import Playlist, Track, PlaylistItem
 from vibeapp.exceptions import PlaylistFetchError, TokenRefreshError
 
 class SpotifyService:
@@ -73,54 +73,6 @@ class SpotifyService:
 
         return playlists
 
-    def get_playlists_tracks(self, access_token, spotify_playlist_id):
-        """ 임의의 유저의 플레이리스트 수록곡 가져오기 """
-        url = "https://api.spotify.com/v1/playlists/{spotify_playlist_id}/tracks"
-        headers = {"Authorization": f"Bearer {access_token}"}
-
-        tracks = []
-        limit = 50
-        offset = 0
-
-        while True:
-            params = {"limit": limit, "offset": offset}
-            res = requests.get(url, headers = headers, params=params)
-
-            if res.status_code == 429:
-                retry_after = int(res.headers.get("Retry-After", 5))
-                time.sleep(retry_after)
-                continue
-
-            if res.status_code != 200:
-                raise PlaylistFetchError(f"수록곡 가져오기 실패: {res.status_code} - {res.text}")
-
-            data = res.json()
-            items = data.get("items", [])
-
-            for item in items:
-                track = item.get("track")
-                if track:
-                    duration_ms = track.get("duration_ms", 0)
-                    min = duration_ms // 60000
-                    sec = (duration_ms % 60000) // 1000
-                    duration_formmatted = f"{min}:{sec:02d}"
-
-                    tracks.append({
-                        "name": track.get("name"),
-                        "artists": ", ".join([artist["name"] for artist in track.get("artist", [])]),
-                        "album": track.get("album", {}).get("name"),
-                        "duration": duration_formmatted,
-                        "preview_url": track.get("preview_url"),
-                        "external_url": track.get("external_urls", {}).get("spotify"),
-                        "image": track.get("album", {}).get("images", [{}])[0].get("url")
-                    })
-
-            if not data.get("next"):
-                break
-            offset += limit
-
-        return tracks
-
     def save_playlists(self, connection, playlists_data):
         """플레이리스트 DB 저장"""
         for item in playlists_data:
@@ -151,5 +103,87 @@ class SpotifyService:
                     platform_connection_id=connection.id
                 )
                 db.session.add(new_playlist)
+
+        db.session.commit()
+
+    def get_tracks(self, access_token, spotify_playlist_id):
+        """ 임의의 유저의 플레이리스트 수록곡 가져오기 """
+        url = "https://api.spotify.com/v1/playlists/{spotify_playlist_id}/tracks"
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        tracks = []
+        limit = 50
+        offset = 0
+
+        while True:
+            params = {"limit": limit, "offset": offset}
+            res = requests.get(url, headers = headers, params=params)
+
+            if res.status_code == 429:
+                retry_after = int(res.headers.get("Retry-After", 5))
+                time.sleep(retry_after)
+                continue
+
+            if res.status_code != 200:
+                raise PlaylistFetchError(f"수록곡 가져오기 실패: {res.status_code} - {res.text}")
+
+            data = res.json()
+            tracks.extend(data.get("items", []))
+
+            if not data.get("next"):
+                break
+            offset += limit
+
+        return tracks
+
+    def save_tracks_and_link(self, playlist_db_obj, tracks_data):
+        """
+        수록곡(track) DB 저장 및 PlaylistItem 연결
+        :param playlist_db_obj: DB에 저장된 Playlist 객체 (ID 필요)
+        :param tracks_data: Spotify API에서 가져온 items 리스트
+        """
+
+        PlaylistItem.query.filter_by(playlist_id=playlist_db_obj.id).delete()
+
+        for idx, item in enumerate(tracks_data):
+            track_data = item.get("track")
+
+            if not track_data or not track_data.get("id"):
+                continue
+
+            spotify_id = track_data.get("id")
+            title = track_data.get("name")
+            artist = ", ".join([artist["name"] for artist in track_data.get("artist", [])])
+            album = track_data.get("album", {}).get("name")
+            image_url = track_data.get("album", {}).get("images", [{}])[0].get("url")
+            duration_ms = track_data.get("duration_ms", 0)
+            preview_url = track_data.get("preview_url")
+
+            track = Track.query.filter_by(
+                platform='spotify',
+                platform_track_id=spotify_id
+            ).first()
+
+            if not track:
+                track = Track(
+                    title=title,
+                    artist=artist,
+                    album=album,
+                    duration_ms=duration_ms,
+                    preview_url=preview_url,
+                    image_url=image_url,
+                    platform='spotify',
+                    platform_track_id=spotify_id
+                )
+                db.session.add(track)
+                db.session.flush()
+
+            playlist_item = PlaylistItem(
+                playlist_id=playlist_db_obj.id,
+                track_id=track.id,
+                order=idx,
+                added_at=db.function.now()
+            )
+            db.session.add(playlist_item)
 
         db.session.commit()
