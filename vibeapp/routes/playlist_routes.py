@@ -62,4 +62,4 @@ def playlist_detail(user, playlist_id):
         return redirect(url_for("public.home"))
     except Exception as e:
         flash(f"플레이리스트를 불러오는 중 오류가 발생했습니다: {str(e)}", "danger")
-        return redirect("public.home")
+        return redirect(url_for("public.home"))

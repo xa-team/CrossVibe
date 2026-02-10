@@ -108,7 +108,7 @@ class SpotifyService:
 
     def get_tracks(self, access_token, spotify_playlist_id):
         """ 임의의 유저의 플레이리스트 수록곡 가져오기 """
-        url = "https://api.spotify.com/v1/playlists/{spotify_playlist_id}/tracks"
+        url = f"https://api.spotify.com/v1/playlists/{spotify_playlist_id}/tracks"
         headers = {"Authorization": f"Bearer {access_token}"}
 
         tracks = []
