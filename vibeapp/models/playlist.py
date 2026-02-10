@@ -27,7 +27,7 @@ class Track(db.Model): # 일단 Spotify 기준. 향후 다른 플랫폼 추가�
 
     id = db.Column(db.Integer, primary_key=True)
     platform = db.Column(db.String(20), nullable=False)
-    platform_track_id = db.Column(db.string(100), nullable=False)
+    platform_track_id = db.Column(db.String(100), nullable=False)
 
     title = db.Column(db.String(255), nullable=False)
     artist = db.Column(db.String(255), nullable=False)
@@ -38,12 +38,13 @@ class Track(db.Model): # 일단 Spotify 기준. 향후 다른 플랫폼 추가�
 
 class PlaylistItem(db.Model):
     __tablename__ = "playlist_item"
+    id = db.Column(db.Integer, primary_key=True)
 
     playlist_id = db.Column(db.Integer, db.ForeignKey('playlist.id'), nullable=False)
     track_id = db.Column(db.Integer, db.ForeignKey('track.id'), nullable=False)
 
     order = db.Column(db.Integer, nullable=False)
-    added_at = db.Column(db.Datetime)
+    added_at = db.Column(db.DateTime, default=db.func.now())
 
     playlist = db.relationship('Playlist', back_populates='items')
     track = db.relationship('Track')
