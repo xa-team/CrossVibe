@@ -13,7 +13,7 @@ class PlaylistService:
 
 
     def get_and_save_playlists(self, connection):
-        """플레이리스트 가져와서 저장"""
+        """플레이리스트 정보 가져와서 저장"""
         platform = connection.platform.lower()
 
         if platform == "spotify":
