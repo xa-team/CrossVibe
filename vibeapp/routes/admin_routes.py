@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for
 
 from vibeapp.models.user import User
+from vibeapp.models.playlist import Playlist
 from vibeapp.decorators.auth import admin_required
 
 admin_bp = Blueprint(
@@ -24,3 +25,10 @@ def dashboard():
 def show_database():
     users = User.query.all()
     return render_template("admin/admin_database.html", users=users)
+
+@admin_bp.route("/playlists")
+@admin_required
+def show_playlists():
+    """플레이리스트 DB 목록 확인"""
+    playlists = Playlist.query.all()
+    return render_template("admin/admin_playlists.html", playlists=playlists)

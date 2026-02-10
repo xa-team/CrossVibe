@@ -227,7 +227,7 @@ def callback_platform(platform):
 
 # ===== 개발/테스트용 =====
 @public_bp.route("/make-admin")
-@login_required
+@require_user_safely()
 def make_admin(user):
     """테스트용 관리자 권한 설정"""
     user.is_admin = True

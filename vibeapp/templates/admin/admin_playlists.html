@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block title %}
+    플레이리스트 목록 | CrossVibe
+{% endblock title %}
+{% block content %}
+    <h2 class="mb-4">🎵 플레이리스트 목록 (DB)</h2>
+    {% if playlists %}
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>플랫폼</th>
+                    <th>이름</th>
+                    <th>External ID / Spotify ID</th>
+                    <th>공개여부</th>
+                    <th>소유자 (Platform ID)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pl in playlists %}
+                    <tr>
+                        <td>{{ pl.id }}</td>
+                        <td>{{ pl.platform|upper }}</td>
+                        <td>
+                            <strong>{{ pl.name }}</strong>
+                        </td>
+                        <td>
+                            <small class="text-muted">Ext:</small> {{ pl.external_id }}
+                            <br>
+                            <small class="text-muted">Spot:</small> {{ pl.spotify_id }}
+                        </td>
+                        <td>{{ "✅ 공개" if pl.is_public else "🔒 비공개" }}</td>
+                        <td>{{ pl.platform_user_id }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">등록된 플레이리스트가 없습니다.</div>
+    {% endif %}
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">대시보드로 돌아가기</a>
+{% endblock content %}
