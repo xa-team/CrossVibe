@@ -29,7 +29,7 @@ class PlaylistService:
         else:
             raise UnsupportedPlatformError(f"{platform} 플레이리스트는 지원되지 않습니다.")
 
-    def get_playlist_detail(self, playlist_id, current_user_id):
+    def get_and_save_playlist_detail(self, playlist_id, current_user_id):
         """플레이리스트 상세 정보 및 트랙 가져오기"""
 
         playlist = Playlist.query.get(playlist_id)
@@ -47,10 +47,12 @@ class PlaylistService:
 
         if platform == "spotify":
             access_token = self.auth.refresh_token(connection)
-            tracks = self.spotify.get_playlists_tracks(access_token, playlist.spotify_id)
+            tracks_data = self.spotify.get_tracks(access_token, playlist.spotify_id)
+            self.spotify.save_tracks_and_link(playlist, tracks_data)
+
             return {
                 "playlist": playlist,
-                "tracks": tracks
+                "tracks": playlist.items
             }
         else:
             raise UnsupportedPlatformError(f"{platform} 상세 보기는 지원되지 않습니다.")
