@@ -153,11 +153,26 @@ class SpotifyService:
 
             spotify_id = track_data.get("id")
             title = track_data.get("name")
-            artist = ", ".join([artist["name"] for artist in track_data.get("artist", [])])
-            album = track_data.get("album", {}).get("name")
-            image_url = track_data.get("album", {}).get("images", [{}])[0].get("url")
+
+            artist_data = track_data.get("artists", [])
+            artist = ", ".join([artist["name"] for artist in artist_data])
+
+            album_data = track_data.get("album", {})
+            album = album_data.get("name")
+
+            images = album_data.get("images", [])
+            if images and len(images) > 0:
+                image_url = images[0].get("url")
+            else:
+                image_url = None
+
             duration_ms = track_data.get("duration_ms", 0)
-            preview_url = track_data.get("preview_url")
+            external_urls = track_data.get("external_urls", {})
+            external_url = external_urls.get("spotify")
+
+            minutes = duration_ms // 60000
+            seconds = (duration_ms % 60000) // 1000
+            duration_formatted = f"{minutes}:{seconds:02d}"
 
             track = Track.query.filter_by(
                 platform='spotify',
@@ -170,19 +185,29 @@ class SpotifyService:
                     artist=artist,
                     album=album,
                     duration_ms=duration_ms,
-                    preview_url=preview_url,
+                    duration_formatted=duration_formatted,
+                    external_url=external_url,
                     image_url=image_url,
                     platform='spotify',
                     platform_track_id=spotify_id
-                )
+                    )
                 db.session.add(track)
-                db.session.flush()
+
+            else:
+                track.title = title
+                track.artist = artist
+                track.album = album
+                track.image_url = image_url
+                track.external_url=external_url
+                track.duration_formatted = duration_formatted
+
+            db.session.flush()
 
             playlist_item = PlaylistItem(
                 playlist_id=playlist_db_obj.id,
                 track_id=track.id,
                 order=idx,
-                added_at=db.function.now()
+                added_at=db.func.now()
             )
             db.session.add(playlist_item)
 
