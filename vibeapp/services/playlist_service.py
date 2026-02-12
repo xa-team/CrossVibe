@@ -46,7 +46,7 @@ class PlaylistService:
 
             return {
                 "playlist": playlist,
-                "tracks": playlist.items
+                "playlist_items": playlist.items
             }
         else:
             raise UnsupportedPlatformError(f"{platform} 상세 보기는 지원되지 않습니다.")

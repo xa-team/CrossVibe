@@ -55,7 +55,7 @@ def playlist_detail(user, playlist_id):
         playlist_service = PlaylistService()
         data = playlist_service.get_and_save_playlist_detail(playlist_id)
 
-        return render_template("playlist/playlist_detail.html", playlist=data["playlist"], tracks=data["tracks"])
+        return render_template("playlist/playlist_detail.html", playlist=data["playlist"], playlist_items=data["playlist_items"])
 
     except UnsupportedPlatformError as e:
         flash(str(e), "warning")

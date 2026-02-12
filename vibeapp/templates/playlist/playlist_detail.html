@@ -31,12 +31,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for item in tracks %}
+                            {% for playlistItem in playlist_items %}
                                 <tr>
                                     <td class="text-center text-muted">{{ loop.index }}</td>
                                     <td>
-                                        {% if item.track.image_url %}
-                                            <img src="{{ item.track.image_url }}"
+                                        {% if playlistItem.track.image_url %}
+                                            <img src="{{ playlistItem.track.image_url }}"
                                                  alt="Cover"
                                                  class="rounded"
                                                  width="40"
@@ -45,13 +45,13 @@
                                             <div class="bg-light rounded d-flex align-items-center justify-content-center track-image">🎵</div>
                                         {% endif %}
                                     </td>
-                                    <td class="fw-bold">{{ item.track.title }}</td>
-                                    <td>{{ item.track.artist }}</td>
-                                    <td class="text-muted small">{{ item.track.album }}</td>
-                                    <td class="text-monospace">{{ item.track.duration_formatted }}</td>
+                                    <td class="fw-bold">{{ playlistItem.track.title }}</td>
+                                    <td>{{ playlistItem.track.artist }}</td>
+                                    <td class="text-muted small">{{ playlistItem.track.album }}</td>
+                                    <td class="text-monospace">{{ playlistItem.track.duration_formatted }}</td>
                                     <td>
-                                        {% if item.track.external_url %}
-                                            <a href="{{ item.track.external_url }}"
+                                        {% if playlistItem.track.external_url %}
+                                            <a href="{{ playlistItem.track.external_url }}"
                                                target="_blank"
                                                class="btn btn-small btn-outline-success">Play</a>
                                         {% endif %}
