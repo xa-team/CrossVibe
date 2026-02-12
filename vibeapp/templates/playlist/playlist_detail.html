@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block title %}
+    {{ playlist.name }} | CrossVibe
+{% endblock title %}
+{% block content %}
+    <div class="container my-4">
+        <div class="mb-4">
+            <button onclick="history.back()" class="btn btn-outline-secondary mb-3">뒤로가기</button>
+            <div class="d-flex align-items-center gap-3">
+                <div>
+                    <h2 class="mb-0">{{ playlist.name }}</h2>
+                    <span class="platform-icon-playlist display-4"
+                          title="{{ playlist.platform }}"></span>
+                    {% if playlist.is_public %}<span class="badge bg-success">Public</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="track-number">#</th>
+                                <th class="track-cover">Cover</th>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th>Album</th>
+                                <th>Time</th>
+                                <th>Link({{ playlist.platform }})</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in tracks %}
+                                <tr>
+                                    <td class="text-center text-muted">{{ loop.index }}</td>
+                                    <td>
+                                        {% if item.track.image_url %}
+                                            <img src="{{ item.track.image_url }}"
+                                                 alt="Cover"
+                                                 class="rounded"
+                                                 width="40"
+                                                 height="40">
+                                        {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center track-image">🎵</div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-bold">{{ item.track.title }}</td>
+                                    <td>{{ item.track.artist }}</td>
+                                    <td class="text-muted small">{{ item.track.album }}</td>
+                                    <td class="text-monospace">{{ item.track.duration_formatted }}</td>
+                                    <td>
+                                        {% if item.track.external_url %}
+                                            <a href="{{ item.track.external_url }}"
+                                               target="_blank"
+                                               class="btn btn-small btn-outline-success">Play</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% block scripts %}
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.platform-icon-playlist').forEach(icon => {
+                const platform = icon.getAttribute('title');
+                icon.innerHTML = CrossVibeUtils.getPlatformIcon(platform, {size: 40});
+            });
+        });
+        </script>
+    {% endblock scripts %}
+{% endblock content %}

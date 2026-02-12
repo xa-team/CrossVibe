@@ -3,17 +3,19 @@
     내 플레이리스트
 {% endblock title %}
 {% block content %}
-    <h2>{{ platform|capitalize }}의 플레이리스트</h2>
+    <h2>{{ platform|capitalize }} 플레이리스트</h2>
     {% if playlists %}
         <div class="list-group mt-4">
             {% for pl in playlists %}
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
                         <span class="platform-icon-playlist" title="{{ pl.platform }}"></span>
-                        <div>
-                            <h5 class="mb-0">{{ pl.name }}</h5>
-                            <small class="text-muted">{{ pl.platform | title }}</small>
-                        </div>
+                        <a href="{{ url_for ('playlist.playlist_detail', playlist_id=pl.id) }}"
+                           class="btn">
+                            <div>
+                                <h5 class="mb-0">{{ pl.name }}</h5>
+                            </div>
+                        </a>
                     </div>
                     <div>
                         {% if pl.is_public %}

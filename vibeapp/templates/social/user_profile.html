@@ -146,30 +146,15 @@
                             <h5 class="mb-0">🎵 {{ profile_user.display_name or profile_user.username }}님의 플레이리스트</h5>
                         </div>
                         <div class="card-body">
-                            {% set user_playlists = [] %}
-                            {% for conn in profile_user.platform_connections %}
-                                {% for playlist in conn.playlists %}
-                                    {% if playlist.is_public %}
-                                        {% set user_playlists = user_playlists + [playlist] %}
-                                    {% endif %}
-                                {% endfor %}
-                            {% endfor %}
-                            {% if user_playlists %}
-                                <div class="row">
-                                    {% for playlist in user_playlists[:6] %}
-                                        <div class="col-md-6 mb-3">
-                                            <div class="card border-0 bg-light">
+                            <div class="row">
+                                {% for playlist in playlists[:6] %}
+                                    <div class="col-md-6 mb-3">
+                                        <a href="{{ url_for('playlist.playlist_detail', playlist_id=playlist.id) }}"
+                                           class="text-decoration-none text-dark">
+                                            <div class="card border-0 bg-light card-hover h-100">
                                                 <div class="card-body py-2">
                                                     <div class="d-flex align-items-center">
-                                                        <div class="me-3">
-                                                            {% if playlist.platform == "spotify" %}
-                                                                🎵
-                                                            {% elif playlist.platform == "youtube" %}
-                                                                ▶️
-                                                            {% else %}
-                                                                🎶
-                                                            {% endif %}
-                                                        </div>
+                                                        <span class="platform-icon-playlist me-3" title="{{ playlist.platform }}"></span>
                                                         <div class="flex-grow-1">
                                                             <div class="fw-bold small">{{ playlist.name }}</div>
                                                             <div class="text-muted small">{{ playlist.platform|title }}</div>
@@ -177,44 +162,44 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                                {% if user_playlists|length > 6 %}
-                                    <div class="text-center mt-3">
-                                        <small class="text-muted">그 외 {{ user_playlists|length - 6 }}개의 플레이리스트가 더 있습니다.</small>
+                                        </a>
                                     </div>
-                                {% endif %}
-                            {% else %}
-                                <div class="text-center text-muted py-4">
-                                    <div class="display-4">🎵</div>
-                                    <p class="mb-0">공개된 플레이리스트가 없습니다.</p>
+                                {% endfor %}
+                            </div>
+                            {% if user_playlists|length > 6 %}
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">그 외 {{ user_playlists|length - 6 }}개의 플레이리스트가 더 있습니다.</small>
                                 </div>
                             {% endif %}
+                            <div class="text-center text-muted py-4">
+                                <div class="display-4">🎵</div>
+                                <p class="mb-0">공개된 플레이리스트가 없습니다.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        {% else %}
-            <div class="row mt-4">
-                <div class="col-md-8 mx-auto">
-                    <div class="card border-secondary">
-                        <div class="card-body text-center py-5">
-                            <div class="display-4 mb-3">🔒</div>
-                            <h5>음악 정보는 친구만 볼 수 있습니다</h5>
-                            <p class="text-muted">{{ profile_user.display_name or profile_user.username }}님과 친구가 되어 음악 취향을 공유해보세요!</p>
-                        </div>
+        </div>
+    {% else %}
+        <div class="row mt-4">
+            <div class="col-md-8 mx-auto">
+                <div class="card border-secondary">
+                    <div class="card-body text-center py-5">
+                        <div class="display-4 mb-3">🔒</div>
+                        <h5>음악 정보는 친구만 볼 수 있습니다</h5>
+                        <p class="text-muted">{{ profile_user.display_name or profile_user.username }}님과 친구가 되어 음악 취향을 공유해보세요!</p>
                     </div>
                 </div>
             </div>
-        {% endif %}
-    </div>
-    {% block scripts %}
-        <script src="{{ url_for('static', filename='js/core/api.js') }}"></script>
-        <script src="{{ url_for('static', filename='js/core/utils.js') }}"></script>
-        <script src="{{ url_for('static', filename='js/modules/friends.js') }}"></script>
-        <script src="{{ url_for('static', filename='js/pages/social.js') }}"></script>
-        <script>
+        </div>
+    {% endif %}
+{% endblock content %}
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/core/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/core/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/modules/friends.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pages/social.js') }}"></script>
+    <script>
             document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.user-platforms').forEach(container => {
                     const icons = container.querySelectorAll('.platform-icon-mini');
@@ -223,7 +208,10 @@
                         icon.innerHTML = CrossVibeUtils.getPlatformIcon(platform, {size: 24});
                     });
                 });
+                document.querySelectorAll('.platform-icon-playlist').forEach(icon => {
+                    const platform = icon.getAttribute('title');
+                    icon.innerHTML = CrossVibeUtils.getPlatformIcon(platform, {size: 24});
+                });
             });
-        </script>
-    {% endblock scripts %}
-{% endblock content %}
+    </script>
+{% endblock scripts %}

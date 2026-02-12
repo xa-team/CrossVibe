@@ -15,4 +15,4 @@ class PlatformConnection(db.Model):
 
     user = db.relationship("User", back_populates="platform_connections")
     token = db.relationship("PlatformToken", back_populates="platform_connection", uselist=False)
-    playlists = db.relationship("vibeapp.models.playlist.Playlist", back_populates="platform_connection", cascade="all, delete-orphan")
+    playlists = db.relationship("Playlist", back_populates="platform_connection", cascade="all, delete-orphan")
