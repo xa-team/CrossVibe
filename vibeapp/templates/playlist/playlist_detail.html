@@ -1,19 +1,16 @@
-{% {% extends "layout.html" %} %}
-{%
+{% extends "layout.html" %}
 {% block title %}
     {{ playlist.name }} | CrossVibe
 {% endblock title %}
-%}
-{%
 {% block content %}
     <div class="container my-4">
         <div class="mb-4">
             <button onclick="history.back()" class="btn btn-outline-secondary mb-3">뒤로가기</button>
             <div class="d-flex align-items-center gap-3">
-                <span class="platform-icon-playlist display-4"
-                      title="{{ playlist.platform }}"></span>
                 <div>
                     <h2 class="mb-0">{{ playlist.name }}</h2>
+                    <span class="platform-icon-playlist display-4"
+                          title="{{ playlist.platform }}"></span>
                     {% if playlist.is_public %}<span class="badge bg-success">공개</span>{% endif %}
                 </div>
             </div>
@@ -34,12 +31,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for track in tracks %}
+                            {% for item in tracks %}
                                 <tr>
                                     <td class="text-center text-muted">{{ loop.index }}</td>
                                     <td>
-                                        {% if track.image %}
-                                            <img src="{{ track.image }}"
+                                        {% if item.track.image_url %}
+                                            <img src="{{ item.track.image_url }}"
                                                  alt="Cover"
                                                  class="rounded"
                                                  width="40"
@@ -48,13 +45,13 @@
                                             <div class="bg-light rounded d-flex align-items-center justify-content-center track-image">🎵</div>
                                         {% endif %}
                                     </td>
-                                    <td class="fw-bold">{{ track.name }}</td>
-                                    <td>{{ track.artists }}</td>
-                                    <td class="text-muted small">{{ track.album }}</td>
-                                    <td class="text-monospace">{{ track.duration }}</td>
+                                    <td class="fw-bold">{{ item.track.title }}</td>
+                                    <td>{{ item.track.artist }}</td>
+                                    <td class="text-muted small">{{ item.track.album }}</td>
+                                    <td class="text-monospace">{{ item.track.duration_formatted }}</td>
                                     <td>
-                                        {% if track.preview_url %}
-                                            <a href="{{ track.preview_url }}"
+                                        {% if item.track.external_url %}
+                                            <a href="{{ item.track.external_url }}"
                                                target="_blank"
                                                class="btn btn-small btn-outline-success">Play</a>
                                         {% endif %}
