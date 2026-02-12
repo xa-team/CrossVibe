@@ -11,7 +11,7 @@
                     <h2 class="mb-0">{{ playlist.name }}</h2>
                     <span class="platform-icon-playlist display-4"
                           title="{{ playlist.platform }}"></span>
-                    {% if playlist.is_public %}<span class="badge bg-success">공개</span>{% endif %}
+                    {% if playlist.is_public %}<span class="badge bg-success">Public</span>{% endif %}
                 </div>
             </div>
         </div>
@@ -27,7 +27,7 @@
                                 <th>Artist</th>
                                 <th>Album</th>
                                 <th>Time</th>
-                                <th>Link</th>
+                                <th>Link({{ playlist.platform }})</th>
                             </tr>
                         </thead>
                         <tbody>
